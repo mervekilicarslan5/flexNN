@@ -3,7 +3,8 @@
 
 namespace simple_nn
 {
-	class BatchNorm2d : public Layer
+    template<typename T>
+	class BatchNorm2d : public Layer<T>
 	{
 	private:
 		int batch;
@@ -13,34 +14,35 @@ namespace simple_nn
 		int hw;
 		float eps;
 		float momentum;
-		VecXf mu;
-		VecXf var;
-		VecXf dgamma;
-		VecXf dbeta;
-		VecXf sum1;
-		VecXf sum2;
+		VecX<T> mu;
+		VecX<T> var;
+		VecX<T> dgamma;
+		VecX<T> dbeta;
+		VecX<T> sum1;
+		VecX<T> sum2;
 	public:
-		MatXf xhat;
-		MatXf dxhat;
-		VecXf move_mu;
-		VecXf move_var;
-		VecXf gamma;
-		VecXf beta;
+		MatX<T> xhat;
+		MatX<T> dxhat;
+		VecX<T> move_mu;
+		VecX<T> move_var;
+		VecX<T> gamma;
+		VecX<T> beta;
 		BatchNorm2d(float eps = 0.00001f, float momentum = 0.9f);
 		void set_layer(const vector<int>& input_shape) override;
-		void forward(const MatXf& prev_out, bool is_training) override;
-		void backward(const MatXf& prev_out, MatXf& prev_delta) override;
+		void forward(const MatX<T>& prev_out, bool is_training) override;
+		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;
 		void update_weight(float lr, float decay) override;
 		void zero_grad() override;
 		vector<int> output_shape() override;
 	private:
-		void calc_batch_mu(const MatXf& prev_out);
-		void calc_batch_var(const MatXf& prev_out);
-		void normalize_and_shift(const MatXf& prev_out, bool is_training);
+		void calc_batch_mu(const MatX<T>& prev_out);
+		void calc_batch_var(const MatX<T>& prev_out);
+		void normalize_and_shift(const MatX<T>& prev_out, bool is_training);
 	};
 
-	BatchNorm2d::BatchNorm2d(float eps, float momentum) :
-		Layer(LayerType::BATCHNORM2D),
+    template<typename T>
+	BatchNorm2d<T>::BatchNorm2d(float eps, float momentum) :
+		Layer<T>(LayerType::BATCHNORM2D),
 		batch(0),
 		ch(0),
 		h(0),
@@ -49,7 +51,8 @@ namespace simple_nn
 		eps(eps),
 		momentum(momentum) {}
 
-	void BatchNorm2d::set_layer(const vector<int>& input_shape)
+    template<typename T>
+	void BatchNorm2d<T>::set_layer(const vector<int>& input_shape)
 	{
 		assert(input_shape.size() == 4 && "BatchNorm2d::set_layer(const vector<int>&): Must be followed by 2d layer.");
 
@@ -59,8 +62,8 @@ namespace simple_nn
 		w = input_shape[3];
 		hw = h * w;
 
-		output.resize(batch * ch, hw);
-		delta.resize(batch * ch, hw);
+		this->output.resize(batch * ch, hw);
+		this->delta.resize(batch * ch, hw);
 		xhat.resize(batch * ch, hw);
 		dxhat.resize(batch * ch, hw);
 		move_mu.resize(ch);
@@ -80,7 +83,8 @@ namespace simple_nn
 		beta.setZero();
 	}
 
-	void BatchNorm2d::forward(const MatXf& prev_out, bool is_training)
+    template<typename T>
+	void BatchNorm2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
 		if (is_training) {
 			calc_batch_mu(prev_out);
@@ -95,7 +99,8 @@ namespace simple_nn
 		}
 	}
 
-	void BatchNorm2d::calc_batch_mu(const MatXf& prev_out)
+    template<typename T>
+	void BatchNorm2d<T>::calc_batch_mu(const MatX<T>& prev_out)
 	{
 		mu.setZero();
 		for (int n = 0; n < batch; n++) {
@@ -105,7 +110,8 @@ namespace simple_nn
 		}
 	}
 
-	void BatchNorm2d::calc_batch_var(const MatXf& prev_out)
+    template<typename T>
+	void BatchNorm2d<T>::calc_batch_var(const MatX<T>& prev_out)
 	{
 		var.setZero();
 		for (int n = 0; n < batch; n++) {
@@ -122,7 +128,8 @@ namespace simple_nn
 		}
 	}
 
-	void BatchNorm2d::normalize_and_shift(const MatXf& prev_out, bool is_training)
+    template<typename T>
+	void BatchNorm2d<T>::normalize_and_shift(const MatX<T>& prev_out, bool is_training)
 	{
 		const float* M = mu.data();
 		const float* V = var.data();
@@ -141,13 +148,14 @@ namespace simple_nn
 				float b = beta[c];
 				for (int j = 0; j < hw; j++) {
 					xhat(i, j) = (prev_out(i, j) - m) / s;
-					output(i, j) = g * xhat(i, j) + b;
+					this->output(i, j) = g * xhat(i, j) + b;
 				}
 			}
 		}
 	}
 
-	void BatchNorm2d::backward(const MatXf& prev_out, MatXf& prev_delta)
+    template<typename T>
+	void BatchNorm2d<T>::backward(const MatX<T>& prev_out, MatX<T>& prev_delta)
 	{
 		// calc dxhat
 		for (int n = 0; n < batch; n++) {
@@ -155,7 +163,7 @@ namespace simple_nn
 				int i = c + ch * n;
 				float g = gamma[c];
 				for (int j = 0; j < hw; j++) {
-					dxhat(i, j) = delta(i, j) * g;
+					dxhat(i, j) = this->delta(i, j) * g;
 				}
 			}
 		}
@@ -188,8 +196,8 @@ namespace simple_nn
 				for (int j = 0; j < hw; j++) {
 					prev_delta(i, j) = (m * dxhat(i, j)) - s1 - (xhat(i, j) * s2);
 					prev_delta(i, j) /= denominator;
-					dg += (xhat(i, j) * delta(i, j));
-					db += delta(i, j);
+					dg += (xhat(i, j) * this->delta(i, j));
+					db += this->delta(i, j);
 				}
 				dgamma[c] += dg;
 				dbeta[c] += db;
@@ -197,7 +205,8 @@ namespace simple_nn
 		}
 	}
 
-	void BatchNorm2d::update_weight(float lr, float decay)
+    template<typename T>
+	void BatchNorm2d<T>::update_weight(float lr, float decay)
 	{
 		float t1 = (1 - (2 * lr * decay) / batch);
 		float t2 = lr / batch;
@@ -209,9 +218,10 @@ namespace simple_nn
 		beta -= t2 * dbeta;
 	}
 
-	void BatchNorm2d::zero_grad()
+    template<typename T>
+	void BatchNorm2d<T>::zero_grad()
 	{
-		delta.setZero();
+		this->delta.setZero();
 		dxhat.setZero();
 		dgamma.setZero();
 		dbeta.setZero();
@@ -219,5 +229,6 @@ namespace simple_nn
 		sum2.setZero();
 	}
 
-	vector<int> BatchNorm2d::output_shape() { return { batch, ch, h, w }; }
+    template<typename T>
+	vector<int> BatchNorm2d<T>::output_shape() { return { batch, ch, h, w }; }
 }

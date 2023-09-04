@@ -3,7 +3,8 @@
 
 namespace simple_nn
 {
-	class AvgPool2d : public Layer
+    template<typename T>
+	class AvgPool2d : public Layer<T>
 	{
 	private:
 		int batch;
@@ -17,18 +18,19 @@ namespace simple_nn
 		int kh;
 		int kw;
 		int stride;
-		// MatXf im_col;
+		// MatX<T> im_col;
 	public:
 		AvgPool2d(int kernel_size, int stride);
 		void set_layer(const vector<int>& input_shape) override;
-		void forward(const MatXf& prev_out, bool is_training) override;
-		void backward(const MatXf& prev_out, MatXf& prev_delta) override;
+		void forward(const MatX<T>& prev_out, bool is_training) override;
+		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;
 		void zero_grad() override;
 		vector<int> output_shape() override;
 	};
 
-	AvgPool2d::AvgPool2d(int kernel_size, int stride) :
-		Layer(LayerType::AVGPOOL2D),
+    template<typename T>
+	AvgPool2d<T>::AvgPool2d(int kernel_size, int stride) :
+		Layer<T>(LayerType::AVGPOOL2D),
 		batch(0),
 		ch(0),
 		ih(0),
@@ -41,7 +43,8 @@ namespace simple_nn
 		kw(kernel_size),
 		stride(stride) {}
 
-	void AvgPool2d::set_layer(const vector<int>& input_shape)
+    template<typename T>
+	void AvgPool2d<T>::set_layer(const vector<int>& input_shape)
 	{
 		batch = input_shape[0];
 		ch = input_shape[1];
@@ -52,17 +55,18 @@ namespace simple_nn
 		ow = calc_outsize(iw, kw, stride, 0);
 		ohw = oh * ow;
 
-		output.resize(batch * ch, ohw);
-		delta.resize(batch * ch, ohw);
+		this->output.resize(batch * ch, ohw);
+		this->delta.resize(batch * ch, ohw);
 		// im_col.resize(kh * kw, ohw);
 	}
 
-	void AvgPool2d::forward(const MatXf& prev_out, bool is_training)
+    template<typename T>
+	void AvgPool2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
-		output.setZero();
-		float* out = output.data();
-		const float* pout = prev_out.data();
-		float denominator = (float)(kh * kw);
+		this->output.setZero();
+		T* out = this->output.data();
+		const T* pout = prev_out.data();
+		auto denominator = kh * kw;
 		for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < ch; c++) {
 				for (int i = 0; i < oh; i++) {
@@ -93,11 +97,12 @@ namespace simple_nn
 		}*/
 	}
 
-	void AvgPool2d::backward(const MatXf& prev_out, MatXf& prev_delta)
+    template<typename T>
+	void AvgPool2d<T>::backward(const MatX<T>& prev_out, MatX<T>& prev_delta)
 	{
-		float* pd = prev_delta.data();
-		const float* d = delta.data();
-		float denominator = (float)(kh * kw);
+		T* pd = prev_delta.data();
+		const T* d = this->delta.data();
+		auto denominator = kh * kw;
 		for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < ch; c++) {
 				for (int i = 0; i < oh; i++) {
@@ -119,7 +124,9 @@ namespace simple_nn
 		}
 	}
 
-	void AvgPool2d::zero_grad() { delta.setZero(); }
+    template<typename T>
+	void AvgPool2d<T>::zero_grad() { this->delta.setZero(); }
 
-	vector<int> AvgPool2d::output_shape() { return { batch, ch, oh, ow }; }
+    template<typename T>
+	vector<int> AvgPool2d<T>::output_shape() { return { batch, ch, oh, ow }; }
 }

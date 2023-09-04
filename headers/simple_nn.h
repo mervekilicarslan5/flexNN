@@ -14,34 +14,37 @@
 
 namespace simple_nn
 {
+    template<typename T>
 	class SimpleNN
 	{
 	private:
-		vector<Layer*> net;
+		vector<Layer<T>*> net;
 		Optimizer* optim;
-		Loss* loss;
+		Loss<T>* loss;
 	public:
-		void add(Layer* layer);
-		void compile(vector<int> input_shape, Optimizer* optim=nullptr, Loss* loss=nullptr);
+		void add(Layer<T>* layer);
+		void compile(vector<int> input_shape, Optimizer* optim=nullptr, Loss<T>* loss=nullptr);
 		void fit(const DataLoader& train_loader, int epochs, const DataLoader& valid_loader);
 		void save(string save_dir, string fname);
 		void load(string save_dir, string fname);
 		void evaluate(const DataLoader& data_loader);
 	private:
-		void forward(const MatXf& X, bool is_training);
-		void classify(const MatXf& output, VecXi& classified);
+		void forward(const MatX<T>& X, bool is_training);
+		void classify(const MatX<T>& output, VecXi& classified);
 		void error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc);
-		void loss_criterion(const MatXf& output, const VecXi& labels, float& loss_acc);
+		void loss_criterion(const MatX<T>& output, const VecXi& labels, float& loss_acc);
 		void zero_grad();
-		void backward(const MatXf& X);
+		void backward(const MatX<T>& X);
 		void update_weight();
 		int count_params();
 		void write_or_read_params(fstream& fs, string mode);
 	};
 
-	void SimpleNN::add(Layer* layer) { net.push_back(layer); }
+    template<typename T>
+	void SimpleNN<T>::add(Layer<T>* layer) { net.push_back(layer); }
 
-	void SimpleNN::compile(vector<int> input_shape, Optimizer* optim, Loss* loss)
+    template<typename T>
+	void SimpleNN<T>::compile(vector<int> input_shape, Optimizer* optim, Loss<T>* loss)
 	{
 		// set optimizer & loss
 		this->optim = optim;
@@ -63,7 +66,8 @@ namespace simple_nn
 		}
 	}
 
-	void SimpleNN::fit(const DataLoader& train_loader, int epochs, const DataLoader& valid_loader)
+    template<typename T>
+	void SimpleNN<T>::fit(const DataLoader& train_loader, int epochs, const DataLoader& valid_loader)
 	{
 		if (optim == nullptr || loss == nullptr) {
 			cout << "The model must be compiled before fitting the data." << endl;
@@ -133,7 +137,8 @@ namespace simple_nn
 		}
 	}
 
-	void SimpleNN::forward(const MatXf& X, bool is_training)
+    template<typename T>
+	void SimpleNN<T>::forward(const MatX<T>& X, bool is_training)
 	{
 		for (int l = 0; l < net.size(); l++) {
 			if (l == 0) net[l]->forward(X, is_training);
@@ -141,7 +146,8 @@ namespace simple_nn
 		}
 	}
 
-	void SimpleNN::classify(const MatXf& output, VecXi& classified)
+    template<typename T>
+	void SimpleNN<T>::classify(const MatX<T>& output, VecXi& classified)
 	{
 		// assume that the last layer is linear, not 2d.
 		assert(output.rows() == classified.size());
@@ -151,7 +157,8 @@ namespace simple_nn
 		}
 	}
 
-	void SimpleNN::error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc)
+    template<typename T>
+	void SimpleNN<T>::error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc)
 	{
 		int batch = (int)classified.size();
 
@@ -162,21 +169,24 @@ namespace simple_nn
 		error_acc += error / batch;
 	}
 
-	void SimpleNN::loss_criterion(const MatXf& output, const VecXi& labels, float& loss_acc)
+    template<typename T>
+	void SimpleNN<T>::loss_criterion(const MatX<T>& output, const VecXi& labels, float& loss_acc)
 	{
 		loss_acc += loss->calc_loss(output, labels, net.back()->delta);
 	}
 
-	void SimpleNN::zero_grad()
+    template<typename T>
+	void SimpleNN<T>::zero_grad()
 	{
 		for (const auto& l : net) l->zero_grad();
 	}
 
-	void SimpleNN::backward(const MatXf& X)
+    template<typename T>
+	void SimpleNN<T>::backward(const MatX<T>& X)
 	{
 		for (int l = (int)net.size() - 1; l >= 0; l--) {
 			if (l == 0) {
-				MatXf empty;
+				MatX<T> empty;
 				net[l]->backward(X, empty);
 			}
 			else {
@@ -185,7 +195,8 @@ namespace simple_nn
 		}
 	}
 
-	void SimpleNN::update_weight()
+    template<typename T>
+	void SimpleNN<T>::update_weight()
 	{
 		float lr = optim->lr();
 		float decay = optim->decay();
@@ -194,7 +205,8 @@ namespace simple_nn
 		}
 	}
 
-	void SimpleNN::save(string save_dir, string fname)
+    template<typename T>
+	void SimpleNN<T>::save(string save_dir, string fname)
 	{
 		string path = save_dir + "/" + fname;
 		fstream fout(path, ios::out | ios::binary);
@@ -210,7 +222,8 @@ namespace simple_nn
 		return;
 	}
 
-	void SimpleNN::load(string save_dir, string fname)
+    template<typename T>
+	void SimpleNN<T>::load(string save_dir, string fname)
 	{
 		string path = save_dir + "/" + fname;
 		fstream fin(path, ios::in | ios::binary);
@@ -237,29 +250,30 @@ namespace simple_nn
 		return;
 	}
 
-	int SimpleNN::count_params()
+    template<typename T>
+	int SimpleNN<T>::count_params()
 	{
 		int total_params = 0;
-		for (const Layer* l : net) {
+		for (const Layer<T>* l : net) {
 			if (l->type == LayerType::LINEAR) {
-				const Linear* lc = dynamic_cast<const Linear*>(l);
+				const Linear<T>* lc = dynamic_cast<const Linear<T>*>(l);
 				total_params += (int)lc->W.size();
 				total_params += (int)lc->b.size();
 			}
 			else if (l->type == LayerType::CONV2D) {
-				const Conv2d* lc = dynamic_cast<const Conv2d*>(l);
+				const Conv2d<T>* lc = dynamic_cast<const Conv2d<T>*>(l);
 				total_params += (int)lc->kernel.size();
 				total_params += (int)lc->bias.size();
 			}
 			else if (l->type == LayerType::BATCHNORM1D) {
-				const BatchNorm1d* lc = dynamic_cast<const BatchNorm1d*>(l);
+				const BatchNorm1d<T>* lc = dynamic_cast<const BatchNorm1d<T>*>(l);
 				total_params += (int)lc->move_mu.size();
 				total_params += (int)lc->move_var.size();
 				total_params += (int)lc->gamma.size();
 				total_params += (int)lc->beta.size();
 			}
 			else if (l->type == LayerType::BATCHNORM2D) {
-				const BatchNorm2d* lc = dynamic_cast<const BatchNorm2d*>(l);
+				const BatchNorm2d<T>* lc = dynamic_cast<const BatchNorm2d<T>*>(l);
 				total_params += (int)lc->move_mu.size();
 				total_params += (int)lc->move_var.size();
 				total_params += (int)lc->gamma.size();
@@ -272,11 +286,12 @@ namespace simple_nn
 		return total_params;
 	}
 
-	void SimpleNN::write_or_read_params(fstream& fs, string mode)
+    template<typename T>
+	void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
 	{
-		for (const Layer* l : net) {
+		for (const Layer<T>* l : net) {
 			if (l->type == LayerType::LINEAR) {
-				const Linear* lc = dynamic_cast<const Linear*>(l);
+				const Linear<T>* lc = dynamic_cast<const Linear<T>*>(l);
 				int s1 = (int)lc->W.size();
 				int s2 = (int)lc->b.size();
 				if (mode == "write") {
@@ -289,7 +304,7 @@ namespace simple_nn
 				}
 			}
 			else if (l->type == LayerType::CONV2D) {
-				const Conv2d* lc = dynamic_cast<const Conv2d*>(l);
+				const Conv2d<T>* lc = dynamic_cast<const Conv2d<T>*>(l);
 				int s1 = (int)lc->kernel.size();
 				int s2 = (int)lc->bias.size();
 				if (mode == "write") {
@@ -302,7 +317,7 @@ namespace simple_nn
 				}
 			}
 			else if (l->type == LayerType::BATCHNORM1D) {
-				const BatchNorm1d* lc = dynamic_cast<const BatchNorm1d*>(l);
+				const BatchNorm1d<T>* lc = dynamic_cast<const BatchNorm1d<T>*>(l);
 				int s1 = (int)lc->move_mu.size();
 				int s2 = (int)lc->move_var.size();
 				int s3 = (int)lc->gamma.size();
@@ -321,7 +336,7 @@ namespace simple_nn
 				}
 			}
 			else if (l->type == LayerType::BATCHNORM2D) {
-				const BatchNorm2d* lc = dynamic_cast<const BatchNorm2d*>(l);
+				const BatchNorm2d<T>* lc = dynamic_cast<const BatchNorm2d<T>*>(l);
 				int s1 = (int)lc->move_mu.size();
 				int s2 = (int)lc->move_var.size();
 				int s3 = (int)lc->gamma.size();
@@ -345,7 +360,8 @@ namespace simple_nn
 		}
 	}
 
-	void SimpleNN::evaluate(const DataLoader& data_loader)
+    template<typename T>
+	void SimpleNN<T>::evaluate(const DataLoader& data_loader)
 	{
 		int batch = data_loader.input_shape()[0];
 		int n_batch = data_loader.size();

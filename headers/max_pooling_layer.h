@@ -5,7 +5,8 @@ namespace simple_nn
 {
 	const float FLOAT_MIN = -1000000000.f;
 
-	class MaxPool2d : public Layer
+    template<typename T>
+	class MaxPool2d : public Layer<T>
 	{
 	private:
 		int batch;
@@ -19,19 +20,20 @@ namespace simple_nn
 		int kh;
 		int kw;
 		int stride;
-		MatXf im_col;
+		MatX<T> im_col;
 		vector<int> indices;
 	public:
 		MaxPool2d(int kernel_size, int stride);
 		void set_layer(const vector<int>& input_shape) override;
-		void forward(const MatXf& prev_out, bool is_training) override;
-		void backward(const MatXf& prev_out, MatXf& prev_delta) override;
+		void forward(const MatX<T>& prev_out, bool is_training) override;
+		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;
 		void zero_grad() override;
 		vector<int> output_shape() override;
 	};
 
-	MaxPool2d::MaxPool2d(int kernel_size, int stride) :
-		Layer(LayerType::MAXPOOL2D),
+    template<typename T>
+	MaxPool2d<T>::MaxPool2d(int kernel_size, int stride) :
+		Layer<T>(LayerType::MAXPOOL2D),
 		batch(0),
 		ch(0),
 		ih(0),
@@ -44,7 +46,8 @@ namespace simple_nn
 		kw(kernel_size),
 		stride(stride) {}
 
-	void MaxPool2d::set_layer(const vector<int>& input_shape)
+    template<typename T>
+	void MaxPool2d<T>::set_layer(const vector<int>& input_shape)
 	{
 		batch = input_shape[0];
 		ch = input_shape[1];
@@ -55,15 +58,16 @@ namespace simple_nn
 		ow = calc_outsize(iw, kw, stride, 0);
 		ohw = oh * ow;
 
-		output.resize(batch * ch, ohw);
-		delta.resize(batch * ch, ohw);
+		this->output.resize(batch * ch, ohw);
+		this->delta.resize(batch * ch, ohw);
 		im_col.resize(kh * kw, ohw);
 		indices.resize(batch * ch * ohw);
 	}
 
-	void MaxPool2d::forward(const MatXf& prev_out, bool is_training)
+    template<typename T>
+	void MaxPool2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
-		float* out = output.data();
+		float* out = this->output.data();
 		const float* pout = prev_out.data();
 		for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < ch; c++) {
@@ -95,16 +99,19 @@ namespace simple_nn
 		}
 	}
 
-	void MaxPool2d::backward(const MatXf& prev_out, MatXf& prev_delta)
+    template<typename T>
+	void MaxPool2d<T>::backward(const MatX<T>& prev_out, MatX<T>& prev_delta)
 	{
 		float* pd = prev_delta.data();
-		const float* d = delta.data();
+		const float* d = this->delta.data();
 		for (int i = 0; i < indices.size(); i++) {
 			pd[indices[i]] += d[i];
 		}
 	}
 
-	void MaxPool2d::zero_grad() { delta.setZero(); }
+    template<typename T>
+	void MaxPool2d<T>::zero_grad() { this->delta.setZero(); }
 
-	vector<int> MaxPool2d::output_shape() { return { batch, ch, oh, ow }; }
+    template<typename T>
+	vector<int> MaxPool2d<T>::output_shape() { return { batch, ch, oh, ow }; }
 }

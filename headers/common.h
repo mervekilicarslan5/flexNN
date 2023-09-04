@@ -12,7 +12,7 @@
 #include <chrono>
 #include <random>
 #include <assert.h>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include "im2col.h"
 #include "col2im.h"
 using namespace std;
@@ -21,14 +21,18 @@ using namespace Eigen;
 
 namespace simple_nn
 {
-
-	typedef Matrix<float, Dynamic, Dynamic, RowMajor> MatXf;
-	typedef Matrix<float, Dynamic, 1> VecXf;
-	typedef Matrix<float, 1, Dynamic> RowVecXf;
+    template<typename T>
+	using MatX = Matrix<T, Dynamic, Dynamic, RowMajor>;
+    template<typename T>
+    using VecX = Matrix<T, Dynamic, 1>;
+    template<typename T>
+    using RowVecX = Matrix<T, 1, Dynamic>;
+    using MatXf = MatX<float>;
 	typedef Matrix<int, Dynamic, Dynamic, RowMajor> MatXi;
 	typedef Matrix<int, Dynamic, 1> VecXi;
 
-	void write_file(const MatXf& data, int channels, string fname)
+    template<typename T>
+	void write_file(const MatX<T>& data, int channels, string fname)
 	{
 		ofstream fout(fname, std::ios::app);
 		if (channels != 0) {
@@ -64,7 +68,8 @@ namespace simple_nn
 		fout.close();
 	}
 
-	void init_weight(MatXf& W, int fan_in, int fan_out, string option)
+    template<typename T>
+	void init_weight(MatX<T>& W, int fan_in, int fan_out, string option)
 	{
 		unsigned seed = (unsigned)chrono::steady_clock::now().time_since_epoch().count();
 		default_random_engine e(seed);

@@ -3,6 +3,7 @@
 
 namespace simple_nn
 {
+    template<typename T>
 	class Loss
 	{
 	public:
@@ -18,45 +19,47 @@ namespace simple_nn
 			n_label = input_shape[1];
 		}
 
-		virtual float calc_loss(const MatXf& prev_out, const VecXi& labels, MatXf& prev_delta) = 0;
+		virtual float calc_loss(const MatX<T>& prev_out, const VecXi& labels, MatX<T>& prev_delta) = 0;
 	};
 
-	class MSELoss : public Loss
+    template<typename T>
+	class MSELoss : public Loss<T>
 	{
 	public:
-		MSELoss() : Loss() {}
+		MSELoss() : Loss<T>() {}
 
-		float calc_loss(const MatXf& prev_out, const VecXi& labels, MatXf& prev_delta) override
+		float calc_loss(const MatX<T>& prev_out, const VecXi& labels, MatX<T>& prev_delta) override
 		{
 			float loss_batch = 0.f, loss = 0.f;
 			prev_delta = prev_out;
-			for (int n = 0; n < batch; n++) {
+			for (int n = 0; n < this->batch; n++) {
 				prev_delta(n, labels[n]) -= 1.f;
-				for (int i = 0; i < n_label; i++) {
+				for (int i = 0; i < this->n_label; i++) {
 					loss = prev_delta(n, i);
 					loss_batch += 0.5f * loss * loss;
 				}
 				// loss_batch += 0.5f * prev_delta.row(n).pow(2).sum();
 			}
-			return loss_batch / batch;
+			return loss_batch / this->batch;
 		}
 	};
 
-	class CrossEntropyLoss : public Loss
+    template<typename T>
+	class CrossEntropyLoss : public Loss<T>
 	{
 	public:
-		CrossEntropyLoss() : Loss() {}
+		CrossEntropyLoss() : Loss<T>() {}
 
-		float calc_loss(const MatXf& prev_out, const VecXi& labels, MatXf& prev_delta)
+		float calc_loss(const MatX<T>& prev_out, const VecXi& labels, MatX<T>& prev_delta)
 		{
 			float loss_batch = 0.f;
 			prev_delta = prev_out;
-			for (int n = 0; n < batch; n++) {
+			for (int n = 0; n < this->batch; n++) {
 				int answer_idx = labels[n];
 				prev_delta(n, answer_idx) -= 1.f;
 				loss_batch -= std::log(prev_out(n, answer_idx));
 			}
-			return loss_batch / batch;
+			return loss_batch / this->batch;
 		}
 	};
 }
