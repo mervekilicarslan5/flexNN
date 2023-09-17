@@ -139,21 +139,37 @@ namespace simple_nn
 			this->delta.resize(this->batch, this->height);
 		}
 
-		void forward(const MatX<T>& prev_out, bool is_training) override
-		{
-			this->output.setZero();
-			for (int n = 0; n < this->batch; n++) {
-				int offset = this->height * n;
-				const T* begin = prev_out.data() + offset;
-				/* T max = *std::max_element(begin, begin + this->height); */
-                T max = T::findMax(begin, begin + this->height);
-				T sum = sum_exp(begin, this->height, max);
-				std::transform(begin, begin + this->height, this->output.data() + offset,
-					[&](const T& e) {
-						return (e - max).exp() / sum;
-					});
-			}
-		}
+        void forward(const MatX<T>& prev_out, bool is_training) override
+{
+    this->output.setZero();
+
+    if (!is_training) { // If not in training mode, compute argmax
+        for (int n = 0; n < this->batch; n++) {
+            int offset = this->height * n;
+            const T* begin = prev_out.data() + offset;
+            
+            // Identify the index with the maximum value in the row
+            std::ptrdiff_t max_idx = T::argMax(begin, begin + this->height);
+
+            // Set the corresponding entry to 1, others remain 0
+            this->output(offset + max_idx) = T(1);
+        }
+    } else { // If in training mode, compute softmax
+        for (int n = 0; n < this->batch; n++) {
+            int offset = this->height * n;
+            const T* begin = prev_out.data() + offset;
+            
+            T max = T::findMax(begin, begin + this->height); // Using T::findMax() which returns the max value
+            T sum = sum_exp(begin, this->height, max);
+
+            std::transform(begin, begin + this->height, this->output.data() + offset,
+                           [&](const T& e) {
+                               return (e - max).exp() / sum;
+                           });
+        }
+    }
+}
+
 
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override
 		{

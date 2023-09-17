@@ -66,13 +66,14 @@ int main(int argc, char** argv)
             model.compile({ cfg.batch, ch, h, w }, new SGD(cfg.lr, cfg.decay), new MSELoss<SHARETYPE>);
         }
         model.fit(train_loader, cfg.epoch, test_loader);
-        /* model.save("./model_zoo", cfg.model + ".pth"); */
+        model.save("./model_zoo", cfg.model + ".pth");
     }
-    /* else { */
-    /*     model.compile({ cfg.batch, ch, h, w }); */
-    /*     model.load(cfg.save_dir, cfg.pretrained); */
-    /*     model.evaluate(test_loader); */
-    /* } */
+    
+    else {
+        model.compile({ cfg.batch, ch, h, w });
+        model.load(cfg.save_dir, cfg.pretrained);
+        model.evaluate(test_loader);
+    }
 
 	return 0;
 }

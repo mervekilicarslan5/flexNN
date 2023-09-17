@@ -2,7 +2,8 @@
 #include <type_traits>
 #include <cmath>
 #include <cstdint>
-
+#include <vector>
+#include <algorithm>
 #define SOME_FRACTIONAL_VALUE 12
 #define ANOTHER_FRACTIONAL_VALUE 24
 
@@ -195,6 +196,8 @@ Wrapper get_s1(){
     return this->s1;
 }
 
+
+
 Wrapper operator+(const Wrapper s) const{
     return Wrapper(this->s1 + s.s1);
 }
@@ -266,6 +269,27 @@ Wrapper<T> log() const{
     return Wrapper<T>(std::log(this->s1));
 }
 
+// Recursive tree-based max computation
+static Wrapper<T> treeFindMax(const Wrapper<T>* begin, const Wrapper<T>* end) {
+    // Base case: If there's only one element, return it
+    if (end - begin == 1) {
+        return *begin;
+    }
+
+    // Split data into two halves
+    const Wrapper<T>* mid = begin + (end - begin) / 2;
+
+    // Recursively find max in each half
+    Wrapper<T> leftMax = treeFindMax(begin, mid);
+    Wrapper<T> rightMax = treeFindMax(mid, end);
+
+    // Return the larger of the two max values
+    return (leftMax > rightMax) ? leftMax : rightMax;
+}
+
+
+
+
 static Wrapper<T> findMax(const Wrapper<T>* begin, const Wrapper<T>* end) {
         Wrapper<T> max_val = *begin;
         for (const Wrapper<T>* iter = begin; iter != end; ++iter) {
@@ -275,6 +299,17 @@ static Wrapper<T> findMax(const Wrapper<T>* begin, const Wrapper<T>* end) {
         }
         return max_val;
     }
+
+static std::ptrdiff_t argMax(const Wrapper<T>* begin, const Wrapper<T>* end) {
+    const Wrapper<T>* max_iter = begin;
+    for (const Wrapper<T>* iter = begin; iter != end; ++iter) {
+        if (*iter > *max_iter) {
+            max_iter = iter;
+        }
+    }
+    return std::distance(begin, max_iter);
+}
+
 
 T reveal() const{
     return this->s1;

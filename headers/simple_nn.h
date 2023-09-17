@@ -286,86 +286,136 @@ namespace simple_nn
 		return total_params;
 	}
 
-    template<typename T>
-	void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
-	{
-		for (const Layer<T>* l : net) {
-			if (l->type == LayerType::LINEAR) {
-				const Linear<T>* lc = dynamic_cast<const Linear<T>*>(l);
-				int s1 = (int)lc->W.size();
-				int s2 = (int)lc->b.size();
-				if (mode == "write") {
-					fs.write((char*)lc->W.data(), sizeof(float) * s1);
-					fs.write((char*)lc->b.data(), sizeof(float) * s2);
-				}
-				else {
-					fs.read((char*)lc->W.data(), sizeof(float) * s1);
-					fs.read((char*)lc->b.data(), sizeof(float) * s2);
-				}
-			}
-			else if (l->type == LayerType::CONV2D) {
-				const Conv2d<T>* lc = dynamic_cast<const Conv2d<T>*>(l);
-				int s1 = (int)lc->kernel.size();
-				int s2 = (int)lc->bias.size();
-				if (mode == "write") {
-					fs.write((char*)lc->kernel.data(), sizeof(float) * s1);
-					fs.write((char*)lc->bias.data(), sizeof(float) * s2);
-				}
-				else {
-					fs.read((char*)lc->kernel.data(), sizeof(float) * s1);
-					fs.read((char*)lc->bias.data(), sizeof(float) * s2);
-				}
-			}
-			else if (l->type == LayerType::BATCHNORM1D) {
-				const BatchNorm1d<T>* lc = dynamic_cast<const BatchNorm1d<T>*>(l);
-				int s1 = (int)lc->move_mu.size();
-				int s2 = (int)lc->move_var.size();
-				int s3 = (int)lc->gamma.size();
-				int s4 = (int)lc->beta.size();
-				if (mode == "write") {
-					fs.write((char*)lc->move_mu.data(), sizeof(float) * s1);
-					fs.write((char*)lc->move_var.data(), sizeof(float) * s2);
-					fs.write((char*)lc->gamma.data(), sizeof(float) * s3);
-					fs.write((char*)lc->beta.data(), sizeof(float) * s4);
-				}
-				else {
-					fs.read((char*)lc->move_mu.data(), sizeof(float) * s1);
-					fs.read((char*)lc->move_var.data(), sizeof(float) * s2);
-					fs.read((char*)lc->gamma.data(), sizeof(float) * s3);
-					fs.read((char*)lc->beta.data(), sizeof(float) * s4);
-				}
-			}
-			else if (l->type == LayerType::BATCHNORM2D) {
-				const BatchNorm2d<T>* lc = dynamic_cast<const BatchNorm2d<T>*>(l);
-				int s1 = (int)lc->move_mu.size();
-				int s2 = (int)lc->move_var.size();
-				int s3 = (int)lc->gamma.size();
-				int s4 = (int)lc->beta.size();
-				if (mode == "write") {
-					fs.write((char*)lc->move_mu.data(), sizeof(float) * s1);
-					fs.write((char*)lc->move_var.data(), sizeof(float) * s2);
-					fs.write((char*)lc->gamma.data(), sizeof(float) * s3);
-					fs.write((char*)lc->beta.data(), sizeof(float) * s4);
-				}
-				else {
-					fs.read((char*)lc->move_mu.data(), sizeof(float) * s1);
-					fs.read((char*)lc->move_var.data(), sizeof(float) * s2);
-					fs.read((char*)lc->gamma.data(), sizeof(float) * s3);
-					fs.read((char*)lc->beta.data(), sizeof(float) * s4);
-				}
-			}
-			else {
-				continue;
-			}
-		}
-	}
+template<typename T>
+void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
+{
+    for (Layer<T>* l : net) {
+        vector<float> tempMatrix1, tempMatrix2, tempMatrix3, tempMatrix4; // Temporary vectors for parameter storage
+
+        if (l->type == LayerType::LINEAR) {
+            Linear<T>* lc = dynamic_cast<Linear<T>*>(l);
+            int s1 = lc->W.rows() * lc->W.cols();
+            int s2 = lc->b.size();
+            tempMatrix1.resize(s1);
+            tempMatrix2.resize(s2);
+
+            if (mode == "write") {
+                for (int i = 0; i < s1; i++) tempMatrix1[i] = lc->W(i / lc->W.cols(), i % lc->W.cols()).reveal();
+                for (int i = 0; i < s2; i++) tempMatrix2[i] = lc->b[i].reveal();
+                fs.write((char*)tempMatrix1.data(), sizeof(float) * s1);
+                fs.write((char*)tempMatrix2.data(), sizeof(float) * s2);
+            }
+            else {
+                fs.read((char*)tempMatrix1.data(), sizeof(float) * s1);
+                fs.read((char*)tempMatrix2.data(), sizeof(float) * s2);
+                for (int i = 0; i < s1; i++) lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(tempMatrix1[i]);
+                for (int i = 0; i < s2; i++) lc->b[i] = T(tempMatrix2[i]);
+            }
+        }
+        else if (l->type == LayerType::CONV2D) {
+            Conv2d<T>* lc = dynamic_cast<Conv2d<T>*>(l);
+            int s1 = lc->kernel.rows() * lc->kernel.cols();
+            int s2 = lc->bias.size();
+            tempMatrix1.resize(s1);
+            tempMatrix2.resize(s2);
+
+            if (mode == "write") {
+                for (int i = 0; i < s1; i++) tempMatrix1[i] = lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()).reveal();
+                for (int i = 0; i < s2; i++) tempMatrix2[i] = lc->bias[i].reveal();
+                fs.write((char*)tempMatrix1.data(), sizeof(float) * s1);
+                fs.write((char*)tempMatrix2.data(), sizeof(float) * s2);
+            }
+            else {
+                fs.read((char*)tempMatrix1.data(), sizeof(float) * s1);
+                fs.read((char*)tempMatrix2.data(), sizeof(float) * s2);
+                for (int i = 0; i < s1; i++) lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(tempMatrix1[i]);
+                for (int i = 0; i < s2; i++) lc->bias[i] = T(tempMatrix2[i]);
+            }
+        }
+    }
+}
+
+
+    /* template<typename T> */
+	/* void SimpleNN<T>::write_or_read_params(fstream& fs, string mode) */
+	/* { */
+		/* for (const Layer<T>* l : net) { */
+			/* if (l->type == LayerType::LINEAR) { */
+				/* const Linear<T>* lc = dynamic_cast<const Linear<T>*>(l); */
+				/* int s1 = (int)lc->W.size(); */
+				/* int s2 = (int)lc->b.size(); */
+				/* if (mode == "write") { */
+					/* fs.write((char*)lc->W.data(), sizeof(float) * s1); */
+					/* fs.write((char*)lc->b.data(), sizeof(float) * s2); */
+				/* } */
+				/* else { */
+					/* fs.read((char*)lc->W.data(), sizeof(float) * s1); */
+					/* fs.read((char*)lc->b.data(), sizeof(float) * s2); */
+				/* } */
+			/* } */
+			/* else if (l->type == LayerType::CONV2D) { */
+				/* const Conv2d<T>* lc = dynamic_cast<const Conv2d<T>*>(l); */
+				/* int s1 = (int)lc->kernel.size(); */
+				/* int s2 = (int)lc->bias.size(); */
+				/* if (mode == "write") { */
+					/* fs.write((char*)lc->kernel.data(), sizeof(float) * s1); */
+					/* fs.write((char*)lc->bias.data(), sizeof(float) * s2); */
+				/* } */
+				/* else { */
+					/* fs.read((char*)lc->kernel.data(), sizeof(float) * s1); */
+					/* fs.read((char*)lc->bias.data(), sizeof(float) * s2); */
+				/* } */
+			/* } */
+			/* else if (l->type == LayerType::BATCHNORM1D) { */
+				/* const BatchNorm1d<T>* lc = dynamic_cast<const BatchNorm1d<T>*>(l); */
+				/* int s1 = (int)lc->move_mu.size(); */
+				/* int s2 = (int)lc->move_var.size(); */
+				/* int s3 = (int)lc->gamma.size(); */
+				/* int s4 = (int)lc->beta.size(); */
+				/* if (mode == "write") { */
+					/* fs.write((char*)lc->move_mu.data(), sizeof(float) * s1); */
+					/* fs.write((char*)lc->move_var.data(), sizeof(float) * s2); */
+					/* fs.write((char*)lc->gamma.data(), sizeof(float) * s3); */
+					/* fs.write((char*)lc->beta.data(), sizeof(float) * s4); */
+				/* } */
+				/* else { */
+					/* fs.read((char*)lc->move_mu.data(), sizeof(float) * s1); */
+					/* fs.read((char*)lc->move_var.data(), sizeof(float) * s2); */
+					/* fs.read((char*)lc->gamma.data(), sizeof(float) * s3); */
+					/* fs.read((char*)lc->beta.data(), sizeof(float) * s4); */
+				/* } */
+			/* } */
+			/* else if (l->type == LayerType::BATCHNORM2D) { */
+				/* const BatchNorm2d<T>* lc = dynamic_cast<const BatchNorm2d<T>*>(l); */
+				/* int s1 = (int)lc->move_mu.size(); */
+				/* int s2 = (int)lc->move_var.size(); */
+				/* int s3 = (int)lc->gamma.size(); */
+				/* int s4 = (int)lc->beta.size(); */
+				/* if (mode == "write") { */
+					/* fs.write((char*)lc->move_mu.data(), sizeof(float) * s1); */
+					/* fs.write((char*)lc->move_var.data(), sizeof(float) * s2); */
+					/* fs.write((char*)lc->gamma.data(), sizeof(float) * s3); */
+					/* fs.write((char*)lc->beta.data(), sizeof(float) * s4); */
+				/* } */
+				/* else { */
+					/* fs.read((char*)lc->move_mu.data(), sizeof(float) * s1); */
+					/* fs.read((char*)lc->move_var.data(), sizeof(float) * s2); */
+					/* fs.read((char*)lc->gamma.data(), sizeof(float) * s3); */
+					/* fs.read((char*)lc->beta.data(), sizeof(float) * s4); */
+				/* } */
+			/* } */
+			/* else { */
+				/* continue; */
+			/* } */
+		/* } */
+	/* } */
 
     template<typename T>
 	void SimpleNN<T>::evaluate(const DataLoader<T>& data_loader)
 	{
 		int batch = data_loader.input_shape()[0];
 		int n_batch = data_loader.size();
-		float error_acc = 0.f;
+		T error_acc(0);
 
 		MatX<T> X;
 		VecXi Y;
@@ -391,6 +441,6 @@ namespace simple_nn
 		cout << fixed << setprecision(2);
 		cout << " - t: " << sec.count() << "s";
 		cout << " - error(" << batch * n_batch << " images): ";
-		cout << error_acc / n_batch * 100 << "%" << endl;
+		cout << (error_acc / n_batch).reveal() * 100 << "%" << endl;
 	}
 }

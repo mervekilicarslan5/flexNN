@@ -44,7 +44,7 @@ namespace simple_nn
 		init("lecun_uniform"),
 		loss("cross_entropy"),
 		batch(32),
-		epoch(30),
+		epoch(2),
 		lr(0.01f),
 		decay(0.f),
 		use_batchnorm(false),
