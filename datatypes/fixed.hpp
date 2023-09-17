@@ -300,14 +300,25 @@ static Wrapper<T> findMax(const Wrapper<T>* begin, const Wrapper<T>* end) {
         return max_val;
     }
 
-static std::ptrdiff_t argMax(const Wrapper<T>* begin, const Wrapper<T>* end) {
+/* static std::ptrdiff_t argMax(const Wrapper<T>* begin, const Wrapper<T>* end) { */
+/*     const Wrapper<T>* max_iter = begin; */
+/*     for (const Wrapper<T>* iter = begin; iter != end; ++iter) { */
+/*         if (*iter > *max_iter) { */
+/*             max_iter = iter; */
+/*         } */
+/*     } */
+/*     return std::distance(begin, max_iter); */
+/* } */
+
+static void argMax(const Wrapper<T>* begin, const Wrapper<T>* end, Wrapper<T>* output) {
     const Wrapper<T>* max_iter = begin;
     for (const Wrapper<T>* iter = begin; iter != end; ++iter) {
         if (*iter > *max_iter) {
             max_iter = iter;
         }
     }
-    return std::distance(begin, max_iter);
+    std::ptrdiff_t max_idx = std::distance(begin, max_iter);
+    output[max_idx] = T(1);
 }
 
 

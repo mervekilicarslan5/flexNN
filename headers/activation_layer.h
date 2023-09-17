@@ -139,7 +139,7 @@ namespace simple_nn
 			this->delta.resize(this->batch, this->height);
 		}
 
-        void forward(const MatX<T>& prev_out, bool is_training) override
+void forward(const MatX<T>& prev_out, bool is_training) override
 {
     this->output.setZero();
 
@@ -148,11 +148,8 @@ namespace simple_nn
             int offset = this->height * n;
             const T* begin = prev_out.data() + offset;
             
-            // Identify the index with the maximum value in the row
-            std::ptrdiff_t max_idx = T::argMax(begin, begin + this->height);
-
-            // Set the corresponding entry to 1, others remain 0
-            this->output(offset + max_idx) = T(1);
+            // Using argMax which sets the max value to 1 in the output
+            T::argMax(begin, begin + this->height, this->output.data() + offset);
         }
     } else { // If in training mode, compute softmax
         for (int n = 0; n < this->batch; n++) {
@@ -169,6 +166,7 @@ namespace simple_nn
         }
     }
 }
+
 
 
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override
