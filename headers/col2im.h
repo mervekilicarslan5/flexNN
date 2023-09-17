@@ -1,7 +1,8 @@
 #pragma once
 
-void col2im_add_pixel(float* im, int height, int width, int channels,
-                    int row, int col, int channel, int pad, float val)
+template <typename T>
+void col2im_add_pixel(T* im, int height, int width, int channels,
+                    int row, int col, int channel, int pad, T val)
 {
     row -= pad;
     col -= pad;
@@ -11,8 +12,9 @@ void col2im_add_pixel(float* im, int height, int width, int channels,
 }
 
 // This one might be too, can't remember.
-void col2im(const float* data_col, int channels, int height, int width,
-            int ksize, int stride, int pad, float* data_im)
+template <typename T>
+void col2im(const T* data_col, int channels, int height, int width,
+            int ksize, int stride, int pad, T* data_im)
 {
     int c, h, w;
     int height_col = (height + 2 * pad - ksize) / stride + 1;
@@ -28,7 +30,7 @@ void col2im(const float* data_col, int channels, int height, int width,
                 int im_row = h_offset + h * stride;
                 int im_col = w_offset + w * stride;
                 int col_index = (c * height_col + h) * width_col + w;
-                float val = data_col[col_index];
+                T val = data_col[col_index];
                 col2im_add_pixel(data_im, height, width, channels,
                     im_row, im_col, c_im, pad, val);
             }

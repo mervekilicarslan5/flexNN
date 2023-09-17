@@ -89,7 +89,7 @@ namespace simple_nn
 	void Conv2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
 		for (int n = 0; n < batch; n++) {
-			const float* im = prev_out.data() + (ic * ihw) * n;
+			const T* im = prev_out.data() + (ic * ihw) * n;
 			im2col(im, ic, ih, iw, kh, 1, pad, im_col.data());
 			this->output.block(oc * n, 0, oc, ohw).noalias() = kernel * im_col;
 			this->output.block(oc * n, 0, oc, ohw).colwise() += bias;
@@ -100,7 +100,7 @@ namespace simple_nn
 	void Conv2d<T>::backward(const MatX<T>& prev_out, MatX<T>& prev_delta)
 	{
 		for (int n = 0; n < batch; n++) {
-			const float* im = prev_out.data() + (ic * ihw) * n;
+			const T* im = prev_out.data() + (ic * ihw) * n;
 			im2col(im, ic, ih, iw, kh, 1, pad, im_col.data());
 			dkernel += this->delta.block(oc * n, 0, oc, ohw) * im_col.transpose();
 			dbias += this->delta.block(oc * n, 0, oc, ohw).rowwise().sum();
@@ -108,7 +108,7 @@ namespace simple_nn
 
 		if (!this->is_first) {
 			for (int n = 0; n < batch; n++) {
-				float* begin = prev_delta.data() + ic * ihw * n;
+				T* begin = prev_delta.data() + ic * ihw * n;
 				im_col = kernel.transpose() * this->delta.block(oc * n, 0, oc, ohw);
 				col2im(im_col.data(), ic, ih, iw, kh, 1, pad, begin);
 			}

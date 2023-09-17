@@ -24,15 +24,15 @@ namespace simple_nn
 	public:
 		void add(Layer<T>* layer);
 		void compile(vector<int> input_shape, Optimizer* optim=nullptr, Loss<T>* loss=nullptr);
-		void fit(const DataLoader& train_loader, int epochs, const DataLoader& valid_loader);
+		void fit(const DataLoader<T>& train_loader, int epochs, const DataLoader<T>& valid_loader);
 		void save(string save_dir, string fname);
 		void load(string save_dir, string fname);
-		void evaluate(const DataLoader& data_loader);
+		void evaluate(const DataLoader<T>& data_loader);
 	private:
 		void forward(const MatX<T>& X, bool is_training);
 		void classify(const MatX<T>& output, VecXi& classified);
-		void error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc);
-		void loss_criterion(const MatX<T>& output, const VecXi& labels, float& loss_acc);
+		void error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc);
+		void loss_criterion(const MatX<T>& output, const VecXi& labels, T& loss_acc);
 		void zero_grad();
 		void backward(const MatX<T>& X);
 		void update_weight();
@@ -67,7 +67,7 @@ namespace simple_nn
 	}
 
     template<typename T>
-	void SimpleNN<T>::fit(const DataLoader& train_loader, int epochs, const DataLoader& valid_loader)
+	void SimpleNN<T>::fit(const DataLoader<T>& train_loader, int epochs, const DataLoader<T>& valid_loader)
 	{
 		if (optim == nullptr || loss == nullptr) {
 			cout << "The model must be compiled before fitting the data." << endl;
@@ -77,13 +77,13 @@ namespace simple_nn
 		int batch = train_loader.input_shape()[0];
 		int n_batch = train_loader.size();
 
-		MatXf X;
+		MatX<T> X;
 		VecXi Y;
 		VecXi classified(batch);
 
 		for (int e = 0; e < epochs; e++) {
-			float loss = 0.f;
-			float error = 0.f;
+			T loss(0);
+			T error(0);
 
 			system_clock::time_point start = system_clock::now();
 			for (int n = 0; n < n_batch; n++) {
@@ -109,8 +109,8 @@ namespace simple_nn
 			system_clock::time_point end = system_clock::now();
 			duration<float> sec = end - start;
 
-			float loss_valid = 0.f;
-			float error_valid = 0.f;
+			T loss_valid(0); 
+			T error_valid(0);
 
 			int n_batch_valid = valid_loader.size();
 			if (n_batch_valid != 0) {
@@ -127,11 +127,11 @@ namespace simple_nn
 
 			cout << fixed << setprecision(2);
 			cout << " - t: " << sec.count() << 's';
-			cout << " - loss: " << loss / n_batch;
-			cout << " - error: " << error / n_batch * 100 << "%";
+			cout << " - loss: " << (loss / n_batch).reveal();
+			cout << " - error: " << (error / n_batch).reveal() * 100 << "%";
 			if (n_batch_valid != 0) {
-				cout << " - loss(valid): " << loss_valid / n_batch_valid;
-				cout << " - error(valid): " << error_valid / n_batch_valid * 100 << "%";
+				cout << " - loss(valid): " << (loss_valid / n_batch_valid).reveal();
+				cout << " - error(valid): " << (error_valid / n_batch_valid).reveal() * 100 << "%";
 			}
 			cout << endl;
 		}
@@ -158,19 +158,19 @@ namespace simple_nn
 	}
 
     template<typename T>
-	void SimpleNN<T>::error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc)
+	void SimpleNN<T>::error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc)
 	{
 		int batch = (int)classified.size();
 
-		float error = 0.f;
+		T error(0);
 		for (int i = 0; i < batch; i++) {
-			if (classified[i] != labels[i]) error++;
+			if (classified[i] != labels[i]) error+=1;
 		}
 		error_acc += error / batch;
 	}
 
     template<typename T>
-	void SimpleNN<T>::loss_criterion(const MatX<T>& output, const VecXi& labels, float& loss_acc)
+	void SimpleNN<T>::loss_criterion(const MatX<T>& output, const VecXi& labels, T& loss_acc)
 	{
 		loss_acc += loss->calc_loss(output, labels, net.back()->delta);
 	}
@@ -361,19 +361,19 @@ namespace simple_nn
 	}
 
     template<typename T>
-	void SimpleNN<T>::evaluate(const DataLoader& data_loader)
+	void SimpleNN<T>::evaluate(const DataLoader<T>& data_loader)
 	{
 		int batch = data_loader.input_shape()[0];
 		int n_batch = data_loader.size();
 		float error_acc = 0.f;
 
-		MatXf X;
+		MatX<T> X;
 		VecXi Y;
 		VecXi classified(batch);
 
 		system_clock::time_point start = system_clock::now();
 		for (int n = 0; n < n_batch; n++) {
-			MatXf X = data_loader.get_x(n);
+			MatX<T> X = data_loader.get_x(n);
 			VecXi Y = data_loader.get_y(n);
 
 			forward(X, false);

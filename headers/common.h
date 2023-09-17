@@ -15,6 +15,7 @@
 #include <eigen3/Eigen/Dense>
 #include "im2col.h"
 #include "col2im.h"
+#include "../datatypes/fixed.hpp"
 using namespace std;
 using namespace chrono;
 using namespace Eigen;
@@ -30,6 +31,9 @@ namespace simple_nn
     using MatXf = MatX<float>;
 	typedef Matrix<int, Dynamic, Dynamic, RowMajor> MatXi;
 	typedef Matrix<int, Dynamic, 1> VecXi;
+    using F = Share<float>;
+    using S32 = Share<uint32_t>;
+    using S64 = Share<uint64_t>;
 
     template<typename T>
 	void write_file(const MatX<T>& data, int channels, string fname)
@@ -69,9 +73,10 @@ namespace simple_nn
 	}
 
     template<typename T>
-	void init_weight(MatX<T>& W, int fan_in, int fan_out, string option)
+	void init_weight(MatX<T>& W_OG, int fan_in, int fan_out, string option)
 	{
-		unsigned seed = (unsigned)chrono::steady_clock::now().time_since_epoch().count();
+        MatX<float> W(W_OG.rows(), W_OG.cols());
+		unsigned seed = 42;
 		default_random_engine e(seed);
 
 		if (option == "lecun_normal") {
@@ -116,7 +121,13 @@ namespace simple_nn
 			cout << "Invalid initialization." << endl;
 			exit(1);
 		}
-	}
+
+    for (int i = 0; i < W.rows(); ++i) {
+        for (int j = 0; j < W.cols(); ++j) {
+            W_OG(i, j) = T(W(i, j));
+        }
+    }
+}
 
 	int calc_outsize(int in_size, int kernel_size, int stride, int pad)
 	{

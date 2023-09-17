@@ -114,10 +114,11 @@ namespace simple_nn
 		}
 	};
 
-	float sum_exp(const float* p, int size, float max)
+    template<typename T>
+	T sum_exp(const T* p, int size, T max)
 	{
-		float out = std::accumulate(p, p + size, 0.f,
-			[&](const float& sum, const float& elem) { return sum + std::exp(elem - max); });
+		T out = std::accumulate(p, p + size, T(0),
+			[&](const T& sum, const T& elem) { return sum + (elem - max).exp(); });
 		return out;
 	}
 
@@ -143,12 +144,13 @@ namespace simple_nn
 			this->output.setZero();
 			for (int n = 0; n < this->batch; n++) {
 				int offset = this->height * n;
-				const float* begin = prev_out.data() + offset;
-				float max = *std::max_element(begin, begin + this->height);
-				float sum = sum_exp(begin, this->height, max);
+				const T* begin = prev_out.data() + offset;
+				/* T max = *std::max_element(begin, begin + this->height); */
+                T max = T::findMax(begin, begin + this->height);
+				T sum = sum_exp(begin, this->height, max);
 				std::transform(begin, begin + this->height, this->output.data() + offset,
-					[&](const float& e) {
-						return std::exp(e - max) / sum;
+					[&](const T& e) {
+						return (e - max).exp() / sum;
 					});
 			}
 		}
@@ -172,7 +174,7 @@ namespace simple_nn
 				prev_out.data(), 
 				prev_out.data() + this->out_block_size, 
 				this->output.data(),
-				[](const float& e) { return std::max(0.f, e); }
+				[](const T& e) { return e.relu(); }
 			);
 		}
 
@@ -183,8 +185,8 @@ namespace simple_nn
 				prev_out.data() + this->out_block_size, 
 				this->delta.data(), 
 				prev_delta.data(),
-				[](const float& e1, const float& e2) {
-					return (e1 <= 0) ? 0 : e2;
+				[](const T& e1, const T& e2) {
+					return e1.drelu(e2);
 				}
 			);
 		}

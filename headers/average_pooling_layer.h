@@ -87,7 +87,7 @@ namespace simple_nn
 				}
 			}
 		}
-
+        // commented out by author
 		/*for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < channels; c++) {
 				const float* im = prev_out.data() + ihw * (c + channels * n);

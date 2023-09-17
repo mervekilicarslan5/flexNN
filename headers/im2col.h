@@ -1,4 +1,5 @@
-float im2col_get_pixel(const float* im, int height, int width, int channels,
+template <typename T>
+T im2col_get_pixel(const T* im, int height, int width, int channels,
                         int row, int col, int channel, int pad)
 {
     row -= pad;
@@ -10,8 +11,9 @@ float im2col_get_pixel(const float* im, int height, int width, int channels,
 
 // From Berkeley Vision's Caffe!
 // https://github.com/BVLC/caffe/blob/master/LICENSE
-void im2col(const float* data_im, int channels, int height, int width,
-            int ksize, int stride, int pad, float* data_col)
+template <typename T>
+void im2col(const T* data_im, int channels, int height, int width,
+            int ksize, int stride, int pad, T* data_col)
 {
     int c, h, w;
     int height_col = (height + 2 * pad - ksize) / stride + 1;

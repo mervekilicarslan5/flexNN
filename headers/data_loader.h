@@ -3,6 +3,7 @@
 
 namespace simple_nn
 {
+    template <typename T>
 	class DataLoader
 	{
 	private:
@@ -12,28 +13,30 @@ namespace simple_nn
 		int h;
 		int w;
 		int chhw;
-		MatXf X;
+		MatX<T> X;
 		VecXi Y;
 		vector<vector<int>> batch_indices;
 	public:
 		DataLoader();
-		DataLoader(MatXf& X, VecXi& Y, int batch, int channels,
+		DataLoader(MatX<T>& X, VecXi& Y, int batch, int channels,
 					int height, int width, bool shuffle);
-		void load(MatXf& X, VecXi& Y, int batch, int channels,
+		void load(MatX<T>& X, VecXi& Y, int batch, int channels,
 			int height, int width, bool shuffle);
 		int size() const;
 		vector<int> input_shape() const;
-		MatXf get_x(int i) const;
+		MatX<T> get_x(int i) const;
 		VecXi get_y(int i) const;
 	private:
 		void generate_batch_indices(bool shuffle);
 	};
 
-	DataLoader::DataLoader() :
+    template <typename T>
+	DataLoader<T>::DataLoader() :
 		n_batch(0), batch(0), ch(0), h(0), w(0), chhw(0) {}
 
-	DataLoader::DataLoader(
-		MatXf& X,
+    template <typename T>
+	DataLoader<T>::DataLoader(
+		MatX<T>& X,
 		VecXi& Y,
 		int batch,
 		int channels,
@@ -54,7 +57,8 @@ namespace simple_nn
 		generate_batch_indices(shuffle);
 	}
 
-	void DataLoader::load(MatXf& X, VecXi& Y, int batch, int channels,
+    template <typename T>
+	void DataLoader<T>::load(MatX<T>& X, VecXi& Y, int batch, int channels,
 		int height, int width, bool shuffle)
 	{
 		this->X = std::move(X);
@@ -68,11 +72,14 @@ namespace simple_nn
 		generate_batch_indices(shuffle);
 	}
 
-	int DataLoader::size() const { return n_batch; }
+    template <typename T>
+	int DataLoader<T>::size() const { return n_batch; }
 
-	vector<int> DataLoader::input_shape() const { return { batch, ch, h, w }; }
+    template <typename T>
+	vector<int> DataLoader<T>::input_shape() const { return { batch, ch, h, w }; }
 
-	void DataLoader::generate_batch_indices(bool shuffle)
+    template <typename T>
+	void DataLoader<T>::generate_batch_indices(bool shuffle)
 	{
 		vector<int> rand_num(batch * n_batch);
 		std::iota(rand_num.begin(), rand_num.end(), 0);
@@ -90,19 +97,21 @@ namespace simple_nn
 		}
 	}
 
-	MatXf DataLoader::get_x(int i) const
+    template <typename T>
+	MatX<T> DataLoader<T>::get_x(int i) const
 	{
-		MatXf batch_x(batch * ch, h * w);
+		MatX<T> batch_x(batch * ch, h * w);
 		for (int j = 0; j < batch; j++) {
-			const float* first = X.data() + batch_indices[i][j] * chhw;
-			const float* last = first + chhw;
-			float* dest = batch_x.data() + j * chhw;
+			const T* first = X.data() + batch_indices[i][j] * chhw;
+			const T* last = first + chhw;
+			T* dest = batch_x.data() + j * chhw;
 			std::copy(first, last, dest);
 		}
 		return batch_x;
 	}
 
-	VecXi DataLoader::get_y(int i) const
+    template <typename T>
+	VecXi DataLoader<T>::get_y(int i) const
 	{
 		VecXi batch_y(batch);
 		for (int j = 0; j < batch_indices[i].size(); j++) {
