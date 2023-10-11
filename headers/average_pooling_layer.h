@@ -63,7 +63,6 @@ namespace simple_nn
     template<typename T>
 	void AvgPool2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
-        using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
         /* using ART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
         MatX<ART> tmp_output = this->output.unaryExpr([](T x) { return ART(x.reveal()); });
         MatX<ART> tmp_prev_out = prev_out.unaryExpr([](T x) { return ART(x.reveal()); });

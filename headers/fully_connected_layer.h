@@ -1,4 +1,5 @@
 #pragma once
+#include "common.h"
 #include "layer.h"
 
 namespace simple_nn
@@ -49,14 +50,68 @@ namespace simple_nn
 		b.setZero();
 	}
 
+    void test() {
+          int batch = 2;
+
+    MatXf tmp_W(3, 2);
+    MatXf tmp_prev_out(2, 2);
+    MatXf tmp_output(batch, 3);
+
+    tmp_W << 2, 3,
+             4, 5,
+             6, 7;
+
+    tmp_prev_out << 9, 10,
+                    11, 12;
+
+    MatX<FCART> tmp_prev_out2 = tmp_prev_out.unaryExpr([](float x) { return FCART(x); });
+    MatX<FCART> tmp_W2 = tmp_W.unaryExpr([](float x) { return FCART(x); });
+    MatX<FCART> tmp_output2 = tmp_output.unaryExpr([](float x) { return FCART(x); });
+
+    /* for (int n = 0; n < batch; n++) { */
+    /* // For each row of tmp_W2 */
+    /* for (int i = 0; i < tmp_W2.rows(); i++) { */
+    /*     FCART sum = FCART(0); */
+    /*     // Compute the dot product of the i-th row of tmp_W2 and the n-th row of tmp_prev_out2 */
+    /*     for (int j = 0; j < tmp_W2.cols(); j++) { */
+    /*         sum += tmp_W2(i, j) * tmp_prev_out2(n, j); */
+    /*     } */
+    /*     tmp_output2(n,i) = sum;  // Note: we're assigning to the row */
+    /* } */
+/* } */
+    PRINT = true;
+    for (int n = 0; n < batch; n++) {
+        tmp_output2.row(n).noalias() = tmp_W2 * tmp_prev_out2.row(n).transpose();
+        if (n > 0) {
+        PRINT = false;
+        }
+    }
+            /* for (int i = 0; i < tmp_output.rows(); ++i) { */
+            /*     for (int j = 0; j < tmp_output.cols(); ++j) { */
+            /*         tmp_output2(i, j).mask_and_send_dot(); */
+            /*     } */
+            /* } */
+
+    MatXf tmp_Wr = tmp_W2.unaryExpr([](FCART x) { return x.reveal(); });
+    MatXf tmp_prev_outr = tmp_prev_out2.unaryExpr([](FCART x) { return x.reveal(); });
+    MatXf tmp_outputr = tmp_output2.unaryExpr([](FCART x) { return x.reveal(); });
+
+    std::cout << "tmp_W : " << tmp_Wr << std::endl;
+    std::cout << "tmp_prev_out : " << tmp_prev_outr << std::endl;
+    std::cout << "tmp_output : " << tmp_outputr << std::endl;
+    auto result = FCART(1) * FCART(1) + FCART(2) * FCART(0.5);
+    std::cout << "result_check : " << result.reveal() << std::endl;
+
+}
+
     template<typename T>
 	void Linear<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
-        using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
-        MatX<ART> tmp_prev_out = prev_out.unaryExpr([](T x) { return ART(x.reveal()); });
-        MatX<ART> tmp_W = W.unaryExpr([](T x) { return ART(x.reveal()); });
-        RowVecX<ART> tmp_b = b.unaryExpr([](T x) { return ART(x.reveal()); });
-        MatX<ART> tmp_output = this->output.unaryExpr([](T x) { return ART(x.reveal()); });
+        /* test(); */
+        MatX<FCART> tmp_prev_out = prev_out.unaryExpr([](T x) { return FCART(x.reveal()); });
+        MatX<FCART> tmp_W = W.unaryExpr([](T x) { return FCART(x.reveal()); });
+        RowVecX<FCART> tmp_b = b.unaryExpr([](T x) { return FCART(x.reveal()); });
+        MatX<FCART> tmp_output = this->output.unaryExpr([](T x) { return FCART(x.reveal()); });
         MatX<T> tmp_output2 = this->output.unaryExpr([](T x) { return T(x.reveal()); });
             /* for (int i = 0; i < tmp_W.size(); i++) { */
         /* auto x = ART(5.3); */
@@ -80,17 +135,31 @@ namespace simple_nn
 		for (int n = 0; n < batch; n++) {
 			/* this->output.row(n).noalias() = W * prev_out.row(n).transpose(); */
 			/* this->output.row(n).noalias() = W * prev_out.row(n).transpose(); */
-			tmp_output.row(n).noalias() = tmp_W * tmp_prev_out.row(n).transpose();
+			/* tmp_output.row(n).noalias() = tmp_W * tmp_prev_out.row(n).transpose(); */
+            for(int i = 0; i < tmp_W.rows(); ++i) {
+            FCART sum = FCART(0);
+            for(int j = 0; j < tmp_W.cols(); ++j) {
+                sum += (tmp_W(i, j) * tmp_prev_out(n, j));  // Use custom * and + operators
+            }
+            tmp_output(n, i) = sum;
+        }
+
+            // loop over all elements in tmp_output
             /* tmp_output2.row(n).noalias() = W * prev_out.row(n).transpose(); */
         }
-            for (int i = 0; i < tmp_output.size(); i++) {
+            for (int i = 0; i < tmp_output.rows(); ++i) {
+                for (int j = 0; j < tmp_output.cols(); ++j) {
+                    tmp_output(i, j).mask_and_send_dot();
+                }
+            }
+            /* for (int i = 0; i < tmp_output.size(); i++) { */
                 /* this->output(i).mask_and_send_dot(); */
                 /* std::cout << "before trunc : " << tmp_output(i).reveal() << " " << tmp_output2(i).reveal() << std::endl; */
-                tmp_output(i).mask_and_send_dot();
+                /* tmp_output(i).mask_and_send_dot(); */
                 /* tmp_output2(i).mask_and_send_dot(); */
                 /* tmp_output(i).mask_and_send_dot(); */
                 /* std::cout << "after trunc : " << tmp_output(i).reveal() << " " << tmp_output2(i).reveal() << std::endl; */
-            }
+            /* } */
 
 		for (int n = 0; n < batch; n++) {
 			/* this->output.row(n).noalias() += b; */
@@ -101,7 +170,7 @@ namespace simple_nn
             /* for (int i = 0; i < tmp_output.size(); i++) { */
             /*     std::cout << "after add : " << tmp_output(i).reveal() << " " << tmp_output2(i).reveal() << std::endl; */
             /* } */
-        this->output = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); });
+        this->output = tmp_output.unaryExpr([](FCART x) { return T(x.reveal()); });
         /* tmp_output2 = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); }); */
         /* this->output = tmp_output2.unaryExpr([](T x) { return T(x.reveal()); }); */
 	}

@@ -14,7 +14,6 @@ int main(int argc, char** argv)
     using UINTTYPE = float;
     using INTTYPE = float;
     using SHARETYPE = Wrapper<FLOATTYPE, INTTYPE, UINTTYPE, ANOTHER_FRACTIONAL_VALUE, DATATYPE>;
-    using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
 
     /* using Sharetype = Wrapper<DATATYPE>; */
     /* using F = FloatFixedConverter<FLOATTYPE, UINTTYPE, ANOTHER_FRACTIONAL_VALUE> ; */
@@ -41,8 +40,10 @@ int main(int argc, char** argv)
 		train_loader.load(train_XX, train_Y, cfg.batch, ch, h, w, cfg.shuffle_train);
 	}
 
+    std::cout << "Reading MNIST test data..." << std::endl;
 	test_X = read_mnist(cfg.data_dir, "t10k-images.idx3-ubyte", n_test);
 	test_Y = read_mnist_label(cfg.data_dir, "t10k-labels.idx1-ubyte", n_test);
+    
     MatX<SHARETYPE> test_XX = test_X.unaryExpr([](float val) { 
     /* return SHARETYPE(val); */
     return SHARETYPE(ART(val).reveal());
@@ -78,6 +79,7 @@ int main(int argc, char** argv)
     
     else {
         model.compile({ cfg.batch, ch, h, w });
+        std::cout << "Loading Model Parameters..." << std::endl;
         model.load(cfg.save_dir, cfg.pretrained);
         model.evaluate(test_loader);
     }

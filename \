@@ -5,8 +5,7 @@
 #include <vector>
 #include <algorithm>
 #define SOME_FRACTIONAL_VALUE 6
-#define ANOTHER_FRACTIONAL_VALUE 12
-bool PRINT = false;
+#define ANOTHER_FRACTIONAL_VALUE 1
 
 
 // General template definitions encapsulated inside a struct
@@ -250,14 +249,10 @@ T get_s1(){
 
 
 Wrapper operator+(const Wrapper s) const{
-    if(PRINT)
-        std::cout << this->reveal() << " + " << s.reveal() << " = " << Wrapper(this->s1 + s.s1, 0).reveal() << std::endl;
     return Wrapper(this->s1 + s.s1, 0);
 }
 
 Wrapper operator-(const Wrapper s) const{
-    if(PRINT)
-        std::cout << this->reveal() << " - " << s.reveal() << " = " << Wrapper(this->s1 - s.s1, 0).reveal() << std::endl;
     return Wrapper(this->s1 - s.s1, 0);
 }
 
@@ -266,8 +261,6 @@ Wrapper operator*(const Wrapper s) const{
     /*     std::cout << "overflow" <<std::endl; */
 
     /* } */
-    if(PRINT)
-        std::cout << this->reveal() << " * " << s.reveal() << " = " << Wrapper(this->s1 * s.s1, 0).reveal() << std::endl;
     return Wrapper(this->s1 * s.s1, 0);
 }
 
@@ -282,9 +275,9 @@ Wrapper operator/(const int s) const{
 void mask_and_send_dot() 
 {
     this->s1 = truncate(this->s1);
-    /* if(std::abs(this->reveal()) > 50){ */
-    /*     std::cout << "s1 " << this->reveal()  << std::endl; */
-    /* } */
+    if(std::abs(this->reveal()) > 50){
+        std::cout << "s1 " << this->reveal()  << std::endl;
+    }
 }
 
 Wrapper complete_mult()
