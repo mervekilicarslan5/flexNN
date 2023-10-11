@@ -63,9 +63,14 @@ namespace simple_nn
     template<typename T>
 	void AvgPool2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
-		this->output.setZero();
-		T* out = this->output.data();
-		const T* pout = prev_out.data();
+        using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
+        /* using ART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
+        MatX<ART> tmp_output = this->output.unaryExpr([](T x) { return ART(x.reveal()); });
+        MatX<ART> tmp_prev_out = prev_out.unaryExpr([](T x) { return ART(x.reveal()); });
+        
+        tmp_output.setZero();
+		ART* out = tmp_output.data();
+		const ART* pout = tmp_prev_out.data();
 		auto denominator = kh * kw;
 		for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < ch; c++) {
@@ -87,6 +92,32 @@ namespace simple_nn
 				}
 			}
 		}
+        this->output = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); });
+		
+        /* this->output.setZero(); */
+		/* T* out = this->output.data(); */
+		/* const T* pout = prev_out.data(); */
+		/* auto denominator = kh * kw; */
+		/* for (int n = 0; n < batch; n++) { */
+			/* for (int c = 0; c < ch; c++) { */
+				/* for (int i = 0; i < oh; i++) { */
+					/* for (int j = 0; j < ow; j++) { */
+						/* int out_idx = j + ow * (i + oh * (c + ch * n)); */
+						/* for (int y = 0; y < kh; y++) { */
+							/* for (int x = 0; x < kw; x++) { */
+								/* int ii = i * stride + y; */
+								/* int jj = j * stride + x; */
+								/* int in_idx = jj + iw * (ii + ih * (c + ch * n)); */
+								/* if (ii >= 0 && ii < ih && jj >= 0 && jj < iw) { */
+									/* out[out_idx] += pout[in_idx]; */
+								/* } */
+							/* } */
+						/* } */
+						/* out[out_idx] /= denominator; */
+					/* } */
+				/* } */
+			/* } */
+		/* } */
         // commented out by author
 		/*for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < channels; c++) {

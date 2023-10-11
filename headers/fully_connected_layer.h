@@ -52,10 +52,58 @@ namespace simple_nn
     template<typename T>
 	void Linear<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
+        using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
+        MatX<ART> tmp_prev_out = prev_out.unaryExpr([](T x) { return ART(x.reveal()); });
+        MatX<ART> tmp_W = W.unaryExpr([](T x) { return ART(x.reveal()); });
+        RowVecX<ART> tmp_b = b.unaryExpr([](T x) { return ART(x.reveal()); });
+        MatX<ART> tmp_output = this->output.unaryExpr([](T x) { return ART(x.reveal()); });
+        MatX<T> tmp_output2 = this->output.unaryExpr([](T x) { return T(x.reveal()); });
+            /* for (int i = 0; i < tmp_W.size(); i++) { */
+        /* auto x = ART(5.3); */
+        /* auto y = ART(2.1); */
+        /* std::cout << "x_s1 : " << x.get_s1() << std::endl; */
+        /* std::cout << "y_s1 : " << y.get_s1() << std::endl; */
+        /* std::cout << "xy_s1 : " << (x*y).get_s1() << std::endl; */
+        /* std::cout << "xy : " << (x*y).reveal() << std::endl; */
+        /* std::cout << "x : " << x.reveal() << std::endl; */
+        /* std::cout << "y : " << y.reveal() << std::endl; */
+        /* auto c = x*y; */
+        /* c.mask_and_send_dot(); */
+        /* std::cout << "xy trunc: : " << c.reveal() << std::endl; */
+                /* std::cout << "W before mult : " << tmp_W(i).reveal() << " " << W(i).reveal() << std::endl; */
+            /* } */
+            /* for (int i = 0; i < tmp_prev_out.size(); i++) { */
+                /* std::cout << "pre_out before mult : " << tmp_prev_out(i).reveal() << " " << prev_out(i).reveal() << std::endl; */
+            /* } */
+
+
 		for (int n = 0; n < batch; n++) {
-			this->output.row(n).noalias() = W * prev_out.row(n).transpose();
-			this->output.row(n).noalias() += b;
+			/* this->output.row(n).noalias() = W * prev_out.row(n).transpose(); */
+			/* this->output.row(n).noalias() = W * prev_out.row(n).transpose(); */
+			tmp_output.row(n).noalias() = tmp_W * tmp_prev_out.row(n).transpose();
+            /* tmp_output2.row(n).noalias() = W * prev_out.row(n).transpose(); */
+        }
+            for (int i = 0; i < tmp_output.size(); i++) {
+                /* this->output(i).mask_and_send_dot(); */
+                /* std::cout << "before trunc : " << tmp_output(i).reveal() << " " << tmp_output2(i).reveal() << std::endl; */
+                tmp_output(i).mask_and_send_dot();
+                /* tmp_output2(i).mask_and_send_dot(); */
+                /* tmp_output(i).mask_and_send_dot(); */
+                /* std::cout << "after trunc : " << tmp_output(i).reveal() << " " << tmp_output2(i).reveal() << std::endl; */
+            }
+
+		for (int n = 0; n < batch; n++) {
+			/* this->output.row(n).noalias() += b; */
+			tmp_output.row(n).noalias() += tmp_b;
+			/* tmp_output2.row(n).noalias() += b; */
+            // loop over all elements of output
 		}
+            /* for (int i = 0; i < tmp_output.size(); i++) { */
+            /*     std::cout << "after add : " << tmp_output(i).reveal() << " " << tmp_output2(i).reveal() << std::endl; */
+            /* } */
+        this->output = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); });
+        /* tmp_output2 = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); }); */
+        /* this->output = tmp_output2.unaryExpr([](T x) { return T(x.reveal()); }); */
 	}
 
     template<typename T>

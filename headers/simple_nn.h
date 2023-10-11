@@ -151,11 +151,21 @@ namespace simple_nn
 	{
 		// assume that the last layer is linear, not 2d.
 		assert(output.rows() == classified.size());
+        using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
+        MatX<ART> tmp_output = output.unaryExpr([](T x){return ART(x.reveal());});
 
 		for (int i = 0; i < classified.size(); i++) {
-			output.row(i).maxCoeff(&classified[i]);
+			tmp_output.row(i).maxCoeff(&classified[i]);
 		}
-	}
+        //copy all the values to the output
+        /* output = tmp_output.unaryExpr([](ART x){return T(x.reveal());}); */
+	    /* for (int i = 0; i < output.rows(); ++i) { */
+        /* for (int j = 0; j < output.cols(); ++j) { */
+            /* std::cout << output(i, j).reveal() << "\t";  // Print each coefficient followed by a tab */
+        /* } */
+        /* std::cout << std::endl;  // New line for each row */
+    /* } */
+    }
 
     template<typename T>
 	void SimpleNN<T>::error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc)
@@ -164,9 +174,14 @@ namespace simple_nn
 
 		T error(0);
 		for (int i = 0; i < batch; i++) {
-			if (classified[i] != labels[i]) error+=1;
-		}
-		error_acc += error / batch;
+			if (classified[i] != labels[i]) 
+            {
+                error+=T(1);
+                std::cout << "classified[i] = " << classified[i] << " labels[i] = " << labels[i] << "\n";
+		    }
+        }
+		/* error_acc += error / batch; */
+        error_acc += error;
 	}
 
     template<typename T>
@@ -289,6 +304,7 @@ namespace simple_nn
 template<typename T>
 void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
 {
+    using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
     for (Layer<T>* l : net) {
         vector<float> tempMatrix1, tempMatrix2, tempMatrix3, tempMatrix4; // Temporary vectors for parameter storage
 
@@ -308,8 +324,8 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(float) * s1);
                 fs.read((char*)tempMatrix2.data(), sizeof(float) * s2);
-                for (int i = 0; i < s1; i++) lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(tempMatrix1[i]);
-                for (int i = 0; i < s2; i++) lc->b[i] = T(tempMatrix2[i]);
+                for (int i = 0; i < s1; i++) lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(ART(tempMatrix1[i]).reveal());
+                for (int i = 0; i < s2; i++) lc->b[i] = T(ART(tempMatrix2[i]).reveal());
             }
         }
         else if (l->type == LayerType::CONV2D) {
@@ -328,8 +344,8 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(float) * s1);
                 fs.read((char*)tempMatrix2.data(), sizeof(float) * s2);
-                for (int i = 0; i < s1; i++) lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(tempMatrix1[i]);
-                for (int i = 0; i < s2; i++) lc->bias[i] = T(tempMatrix2[i]);
+                for (int i = 0; i < s1; i++) lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(ART(tempMatrix1[i]).reveal());
+                for (int i = 0; i < s2; i++) lc->bias[i] = T(ART(tempMatrix2[i]).reveal());
             }
         }
     }
@@ -441,6 +457,6 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
 		cout << fixed << setprecision(2);
 		cout << " - t: " << sec.count() << "s";
 		cout << " - error(" << batch * n_batch << " images): ";
-		cout << (error_acc / n_batch).reveal() * 100 << "%" << endl;
+		cout << error_acc.reveal() / (batch * n_batch) * 100 << "%" << endl;
 	}
 }
