@@ -63,13 +63,9 @@ namespace simple_nn
     template<typename T>
 	void AvgPool2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
-        /* using ART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
-        MatX<ART> tmp_output = this->output.unaryExpr([](T x) { return ART(x.reveal()); });
-        MatX<ART> tmp_prev_out = prev_out.unaryExpr([](T x) { return ART(x.reveal()); });
-        
-        tmp_output.setZero();
-		ART* out = tmp_output.data();
-		const ART* pout = tmp_prev_out.data();
+        this->output.setZero();
+		T* out = this->output.data();
+		const T* pout = prev_out.data();
 		auto denominator = kh * kw;
 		for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < ch; c++) {
@@ -91,7 +87,6 @@ namespace simple_nn
 				}
 			}
 		}
-        this->output = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); });
 		
         /* this->output.setZero(); */
 		/* T* out = this->output.data(); */

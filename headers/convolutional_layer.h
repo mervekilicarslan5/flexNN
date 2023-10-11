@@ -88,47 +88,28 @@ namespace simple_nn
     template<typename T>
 	void Conv2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
-        /* using ART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
-        MatX<MART> tmp_output = this->output.unaryExpr([](T x) { return MART(x.reveal()); });
-        MatX<MART> tmp_prev_out = prev_out.unaryExpr([](T x) { return MART(x.reveal()); });
-        MatX<MART> tmp_kernel = kernel.unaryExpr([](T x) { return MART(x.reveal()); });
-        VecX<MART> tmp_bias = bias.unaryExpr([](T x) { return MART(x.reveal()); });
-        MatX<MART> tmp_im_col = im_col.unaryExpr([](T x) { return MART(x.reveal()); });
 		for (int n = 0; n < batch; n++) {
-			/* const T* im = prev_out.data() + (ic * ihw) * n; */
-			/* im2col(im, ic, ih, iw, kh, 1, pad, im_col.data()); */
-			/* this->output.block(oc * n, 0, oc, ohw).noalias() = kernel * im_col; */
-			const MART* im = tmp_prev_out.data() + (ic * ihw) * n;
-			im2col(im, ic, ih, iw, kh, 1, pad, tmp_im_col.data());
+			const T* im = prev_out.data() + (ic * ihw) * n;
+			im2col(im, ic, ih, iw, kh, 1, pad, im_col.data());
 			/* tmp_output.block(oc * n, 0, oc, ohw).noalias() = tmp_kernel * tmp_im_col; */
             for(int i = 0; i < oc; ++i) {
                 for(int j = 0; j < ohw; ++j) {
-                    MART sum = MART(0);
-                    for(int k = 0; k < tmp_kernel.cols(); ++k) {
-                        sum += (tmp_kernel(i, k) * tmp_im_col(k, j));  // Use custom * and + operators
+                    T sum = T(0);
+                    for(int k = 0; k < kernel.cols(); ++k) {
+                        sum += (kernel(i, k) * im_col(k, j));  // Use custom * and + operators
                     }
-                    tmp_output(oc * n + i, j) = sum;
+                    this->output(oc * n + i, j) = sum;
                 }
             }
             
 
-            /* this->output.block(oc * n, 0, oc, ohw).unaryExpr([](T &val) { val.mask_and_send_dot(); return val; }); */
-            //loop over output block
-            /* for (int i = 0; i < this->output.block(oc * n, 0, oc, ohw).rows(); i++) { */
-            /*     for (int j = 0; j < this->output.block(oc * n, 0, oc, ohw).cols(); j++) { */
-            /*         this->output.block(oc * n, 0, oc, ohw)(i, j).mask_and_send_dot(); */
-            /*     } */
-            /* } */
         }
             for (int i = 0; i < this->output.size(); i++) {
-                /* this->output(i).mask_and_send_dot(); */
-                tmp_output(i).mask_and_send_dot();
+                this->output(i).mask_and_send_dot();
             }
 		for (int n = 0; n < batch; n++) {
-			/* this->output.block(oc * n, 0, oc, ohw).colwise() += bias; */
-			tmp_output.block(oc * n, 0, oc, ohw).colwise() += tmp_bias;
+			this->output.block(oc * n, 0, oc, ohw).colwise() += bias;
 		}
-        this->output = tmp_output.unaryExpr([](MART x) { return T(x.reveal()); });
 	}
 
     template<typename T>

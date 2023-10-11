@@ -9,11 +9,11 @@ void load_model(const Config& cfg, SimpleNN<T>& model);
 
 int main(int argc, char** argv)
 {
-    using DATATYPE = float;
+    using DATATYPE = uint16_t;
     using FLOATTYPE = float;
-    using UINTTYPE = float;
-    using INTTYPE = float;
-    using SHARETYPE = Wrapper<FLOATTYPE, INTTYPE, UINTTYPE, ANOTHER_FRACTIONAL_VALUE, DATATYPE>;
+    using UINTTYPE = uint16_t;
+    using INTTYPE = int16_t;
+    using SHARETYPE = Wrapper<FLOATTYPE, INTTYPE, UINTTYPE, FRACTIONAL_VALUE, DATATYPE>;
 
     /* using Sharetype = Wrapper<DATATYPE>; */
     /* using F = FloatFixedConverter<FLOATTYPE, UINTTYPE, ANOTHER_FRACTIONAL_VALUE> ; */
@@ -34,7 +34,6 @@ int main(int argc, char** argv)
 		train_Y = read_mnist_label(cfg.data_dir, "train-labels.idx1-ubyte", n_train);
         MatX<SHARETYPE> train_XX = train_X.unaryExpr([](float val) { 
     return SHARETYPE(val);
-    /* return SHARETYPE(ART(val).reveal()); */
 });
 
 		train_loader.load(train_XX, train_Y, cfg.batch, ch, h, w, cfg.shuffle_train);
@@ -45,8 +44,7 @@ int main(int argc, char** argv)
 	test_Y = read_mnist_label(cfg.data_dir, "t10k-labels.idx1-ubyte", n_test);
     
     MatX<SHARETYPE> test_XX = test_X.unaryExpr([](float val) { 
-    /* return SHARETYPE(val); */
-    return SHARETYPE(ART(val).reveal());
+    return SHARETYPE(val);
     });
 	test_loader.load(test_XX, test_Y, cfg.batch, ch, h, w, cfg.shuffle_test);
 

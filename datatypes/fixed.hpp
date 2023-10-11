@@ -4,9 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
-#define SOME_FRACTIONAL_VALUE 6
-#define ANOTHER_FRACTIONAL_VALUE 12
-bool PRINT = false;
+#define FRACTIONAL_VALUE 5
 
 
 // General template definitions encapsulated inside a struct
@@ -109,18 +107,31 @@ float truncate(const float& val) {
     return val; // No truncation needed for float
 }
 
+template <>
+uint8_t truncate(const uint8_t& val) {
+    int8_t temp = static_cast<int8_t>(val);
+    temp >>= FRACTIONAL_VALUE;
+    return static_cast<uint8_t>(temp);
+}
+
+template <>
+uint16_t truncate(const uint16_t& val) {
+    int16_t temp = static_cast<int16_t>(val);
+    temp >>= FRACTIONAL_VALUE;
+    return static_cast<uint16_t>(temp);
+}
 
 template <>
 uint32_t truncate(const uint32_t& val) {
     int32_t temp = static_cast<int32_t>(val);
-    temp >>= SOME_FRACTIONAL_VALUE;
+    temp >>= FRACTIONAL_VALUE;
     return static_cast<uint32_t>(temp);
 }
 
 template <>
 uint64_t truncate(const uint64_t& val) {
     int64_t temp = static_cast<int64_t>(val);
-    temp >>= ANOTHER_FRACTIONAL_VALUE;
+    temp >>= FRACTIONAL_VALUE;
     return static_cast<uint64_t>(temp);
 }
 
@@ -228,7 +239,7 @@ T s1;
 
 Wrapper(float s)
 {
-    this->s1 = FloatFixedConverter<float, INT_TYPE, UINT_TYPE, ANOTHER_FRACTIONAL_VALUE>::float_to_ufixed(s);
+    this->s1 = FloatFixedConverter<float, INT_TYPE, UINT_TYPE, FRACTIONAL_VALUE>::float_to_ufixed(s);
     /* this->s1 = FloatFixedConverter<float, INT_TYPE, UINT_TYPE, ANOTHER_FRACTIONAL_VALUE>::ufixed_to_float(FloatFixedConverter<float, INT_TYPE, UINT_TYPE, ANOTHER_FRACTIONAL_VALUE>::float_to_ufixed(s)); */
     /* UINT_TYPE temp = FloatFixedConverter<float_type, INT_TYPE, UINT_TYPE, fractional>::float_to_ufixed(s); */
     /* this->s1 = FloatFixedConverter<float_type, INT_TYPE, UINT_TYPE, fractional>::ufixed_to_float(temp); */
@@ -250,14 +261,10 @@ T get_s1(){
 
 
 Wrapper operator+(const Wrapper s) const{
-    if(PRINT)
-        std::cout << this->reveal() << " + " << s.reveal() << " = " << Wrapper(this->s1 + s.s1, 0).reveal() << std::endl;
     return Wrapper(this->s1 + s.s1, 0);
 }
 
 Wrapper operator-(const Wrapper s) const{
-    if(PRINT)
-        std::cout << this->reveal() << " - " << s.reveal() << " = " << Wrapper(this->s1 - s.s1, 0).reveal() << std::endl;
     return Wrapper(this->s1 - s.s1, 0);
 }
 
@@ -266,8 +273,6 @@ Wrapper operator*(const Wrapper s) const{
     /*     std::cout << "overflow" <<std::endl; */
 
     /* } */
-    if(PRINT)
-        std::cout << this->reveal() << " * " << s.reveal() << " = " << Wrapper(this->s1 * s.s1, 0).reveal() << std::endl;
     return Wrapper(this->s1 * s.s1, 0);
 }
 
@@ -432,7 +437,7 @@ static void argMax(const W* begin, const W* end, W* output) {
 
 
 float_type reveal() const{
-    return FloatFixedConverter<float, INT_TYPE, UINT_TYPE, ANOTHER_FRACTIONAL_VALUE>::ufixed_to_float(this->s1);
+    return FloatFixedConverter<float, INT_TYPE, UINT_TYPE, FRACTIONAL_VALUE>::ufixed_to_float(this->s1);
 }
 
 /* void truncate(){ */

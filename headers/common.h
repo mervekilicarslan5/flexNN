@@ -34,11 +34,10 @@ namespace simple_nn
     using F = Share<float>;
     using S32 = Share<uint32_t>;
     using S64 = Share<uint64_t>;
-    /* using MART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
-    using MART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
-    using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
+    /* using MART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>; */
+    /* using ART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>; */
     /* using FCART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
-    using FCART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>;
+    /* using FCART = Wrapper<float,int64_t,uint64_t,ANOTHER_FRACTIONAL_VALUE,uint64_t>; */
 
     template<typename T>
 	void write_file(const MatX<T>& data, int channels, string fname)

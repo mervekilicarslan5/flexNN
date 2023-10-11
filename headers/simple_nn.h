@@ -151,19 +151,10 @@ namespace simple_nn
 	{
 		// assume that the last layer is linear, not 2d.
 		assert(output.rows() == classified.size());
-        MatX<ART> tmp_output = output.unaryExpr([](T x){return ART(x.reveal());});
 
 		for (int i = 0; i < classified.size(); i++) {
-			tmp_output.row(i).maxCoeff(&classified[i]);
+			output.row(i).maxCoeff(&classified[i]);
 		}
-        //copy all the values to the output
-        /* output = tmp_output.unaryExpr([](ART x){return T(x.reveal());}); */
-	    /* for (int i = 0; i < output.rows(); ++i) { */
-        /* for (int j = 0; j < output.cols(); ++j) { */
-            /* std::cout << output(i, j).reveal() << "\t";  // Print each coefficient followed by a tab */
-        /* } */
-        /* std::cout << std::endl;  // New line for each row */
-    /* } */
     }
 
     template<typename T>
@@ -317,16 +308,10 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
                 for (int i = 0; i < s1; i++) 
                 {
                     tempMatrix1[i] = lc->W(i / lc->W.cols(), i % lc->W.cols()).reveal();
-                if (std::abs(tempMatrix1[i]) > 0.5) {
-                        std::cout << "Warning: float value " << tempMatrix1[i] << " is greater than 0.5" << std::endl;
-                 }
                 }
                 for (int i = 0; i < s2; i++)
                 {
                     tempMatrix2[i] = lc->b[i].reveal();
-                if (std::abs(tempMatrix2[i]) > 0.5) {
-                        std::cout << "Warning: float value " << ART(tempMatrix2[i]).reveal() << " is greater than 0.5" << std::endl;
-                 }
                 }
                     fs.write((char*)tempMatrix1.data(), sizeof(float) * s1);
                 fs.write((char*)tempMatrix2.data(), sizeof(float) * s2);
@@ -336,18 +321,11 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
                 fs.read((char*)tempMatrix2.data(), sizeof(float) * s2);
                 for (int i = 0; i < s1; i++) 
                 {
-                    lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(ART(tempMatrix1[i]).reveal());
-                if (std::abs(tempMatrix1[i]) > 0.5) {
-                        std::cout << "Warning: float value " << ART(tempMatrix1[i]).reveal() << " is greater than 0.5" << std::endl;
-                 }
-
+                    lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(tempMatrix1[i]);
                 }
                 for (int i = 0; i < s2; i++)
                 {
-                    lc->b[i] = T(ART(tempMatrix2[i]).reveal());
-                if (std::abs(tempMatrix2[i]) > 0.5) {
-                        std::cout << "Warning: float value " << ART(tempMatrix2[i]).reveal() << " is greater than 0.5" << std::endl;
-                 }
+                    lc->b[i] = T(tempMatrix2[i]);
                 }
             }
         }
@@ -375,17 +353,11 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
                 fs.read((char*)tempMatrix2.data(), sizeof(float) * s2);
                 for (int i = 0; i < s1; i++)
                 {
-                    lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(ART(tempMatrix1[i]).reveal());
-                if (std::abs(tempMatrix1[i]) > 0.5) {
-                        std::cout << "Warning: float value " << ART(tempMatrix1[i]).reveal() << " is greater than 0.5" << std::endl;
-                 }
+                    lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(tempMatrix1[i]);
                 } 
                 for (int i = 0; i < s2; i++)
                 {
-                    lc->bias[i] = T(ART(tempMatrix2[i]).reveal());
-                if (std::abs(tempMatrix2[i]) > 0.5) {
-                        std::cout << "Warning: float value " << ART(tempMatrix2[i]).reveal() << " is greater than 0.5" << std::endl;
-                 }
+                    lc->bias[i] = T(tempMatrix2[i]);
                 }
             }
         }

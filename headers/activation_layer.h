@@ -141,34 +141,30 @@ namespace simple_nn
 
 void forward(const MatX<T>& prev_out, bool is_training) override
 {
-        /* using ART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
-        MatX<ART> tmp_output = this->output.unaryExpr([](T x) { return ART(x.reveal()); });
-        MatX<ART> tmp_prev_out = prev_out.unaryExpr([](T x) { return ART(x.reveal()); });
-        tmp_output.setZero();
+        this->output.setZero();
 
     if (!is_training) { // If not in training mode, compute argmax
         for (int n = 0; n < this->batch; n++) {
             int offset = this->height * n;
-            const ART* begin = tmp_prev_out.data() + offset;
+            const T* begin = prev_out.data() + offset;
             
             // Using argMax which sets the max value to 1 in the output
-            ART::argMax(begin, begin + this->height, tmp_output.data() + offset);
+            T::argMax(begin, begin + this->height, this->output.data() + offset);
         }
     } else { // If in training mode, compute softmax
         for (int n = 0; n < this->batch; n++) {
             int offset = this->height * n;
-            const ART* begin = tmp_prev_out.data() + offset;
+            const T* begin = prev_out.data() + offset;
             
-            ART max = ART::findMax(begin, begin + this->height); // Using T::findMax() which returns the max value
-            ART sum = sum_exp(begin, this->height, max);
+            T max = T::findMax(begin, begin + this->height); // Using T::findMax() which returns the max value
+            T sum = sum_exp(begin, this->height, max);
 
-            std::transform(begin, begin + this->height, tmp_output.data() + offset,
-                           [&](const ART& e) {
+            std::transform(begin, begin + this->height, this->output.data() + offset,
+                           [&](const T& e) {
                                return (e - max).exp() / sum;
                            });
         }
     }
-    this->output = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); });
     
         /* this->output.setZero(); */
 
@@ -212,24 +208,13 @@ void forward(const MatX<T>& prev_out, bool is_training) override
 
 		void forward(const MatX<T>& prev_out, bool is_training) override
 		{
-        /* using ART = Wrapper<float,float,float,ANOTHER_FRACTIONAL_VALUE,float>; */
-        MatX<ART> tmp_output = this->output.unaryExpr([](T x) { return ART(x.reveal()); });
-        MatX<ART> tmp_prev_out = prev_out.unaryExpr([](T x) { return ART(x.reveal()); });
-        tmp_output.setZero();
+        this->output.setZero();
 			std::transform(
-				tmp_prev_out.data(), 
-				tmp_prev_out.data() + this->out_block_size, 
-				tmp_output.data(),
-				[](const ART& e) { return e.relu(); }
+				prev_out.data(), 
+				prev_out.data() + this->out_block_size, 
+				this->output.data(),
+				[](const T& e) { return e.relu(); }
 			);
-        this->output = tmp_output.unaryExpr([](ART x) { return T(x.reveal()); });
-			/* this->output.setZero(); */
-			/* std::transform( */
-			/* 	prev_out.data(), */ 
-			/* 	prev_out.data() + this->out_block_size, */ 
-			/* 	this->output.data(), */
-			/* 	[](const T& e) { return e.relu(); } */
-			/* ); */
 		}
 
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override
