@@ -98,15 +98,16 @@ namespace simple_nn
                     for(int k = 0; k < kernel.cols(); ++k) {
                         sum += (kernel(i, k) * im_col(k, j));  // Use custom * and + operators
                     }
+                    sum.mask_and_send_dot(); // send immediately to utilize network better
                     this->output(oc * n + i, j) = sum;
                 }
             }
             
 
         }
-            for (int i = 0; i < this->output.size(); i++) {
-                this->output(i).mask_and_send_dot();
-            }
+            /* for (int i = 0; i < this->output.size(); i++) { */
+            /*     this->output(i).mask_and_send_dot(); */
+            /* } */
 		for (int n = 0; n < batch; n++) {
 			this->output.block(oc * n, 0, oc, ohw).colwise() += bias;
 		}

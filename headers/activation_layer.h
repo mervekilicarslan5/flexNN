@@ -214,7 +214,7 @@ void forward(const MatX<T>& prev_out, bool is_training) override
 				prev_out.data() + this->out_block_size, 
 				this->output.data(),
 				[](const T& e) { return e.relu(); }
-			);
+			); // need to define a vectorized relu call to minimize communication rounds
 		}
 
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override
