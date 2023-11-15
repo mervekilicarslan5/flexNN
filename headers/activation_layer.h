@@ -208,14 +208,17 @@ void forward(const MatX<T>& prev_out, bool is_training) override
 
 		void forward(const MatX<T>& prev_out, bool is_training) override
 		{
-        this->output.setZero();
-			std::transform(
-				prev_out.data(), 
-				prev_out.data() + this->out_block_size, 
-				this->output.data(),
-				[](const T& e) { return e.relu(); }
-			); // need to define a vectorized relu call to minimize communication rounds
-		}
+        /* T::RELU(begin, begin + this->height, this->output.data()); */
+        /* this->output.setZero(); */
+			/* std::transform( */
+				/* prev_out.data(), */ 
+				/* prev_out.data() + this->out_block_size, */ 
+				/* this->output.data(), */
+				/* [](const T& e) { return e.relu(); } */
+			/* ); // need to define a vectorized relu call to minimize communication rounds */
+		//instead of above approach, get contiguous data from prev_out with a beggining and end pointer and use T::RELU
+        T::RELU(prev_out.data(), prev_out.data() + this->out_block_size, this->output.data());
+        }
 
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override
 		{

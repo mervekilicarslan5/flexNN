@@ -286,14 +286,15 @@ Wrapper operator/(const int s) const{
 
 void mask_and_send_dot() 
 {
-    this->s1 = truncate(this->s1);
+    /* this->s1 = truncate(this->s1); */
     /* if(std::abs(this->reveal()) > 50){ */
     /*     std::cout << "s1 " << this->reveal()  << std::endl; */
     /* } */
 }
 
-Wrapper complete_mult()
+void complete_mult()
 {
+    this->s1 = truncate(this->s1);
 
 }
 
@@ -401,8 +402,17 @@ static W treeFindMax(const W* begin, const W* end) {
     return (leftMax > rightMax) ? leftMax : rightMax;
 }
 
+static void RELU(const W* begin, const W*end, W* output){
+    int i = 0;
+    for (const W* iter = begin; iter != end; ++iter) {
+            output[i++] = iter->relu();
+    }
+}
 
-
+static void communicate()
+{
+    /* std::cout << "communicate" << std::endl; */
+}
 
 static W findMax(const W* begin, const W* end) {
         W max_val = *begin;

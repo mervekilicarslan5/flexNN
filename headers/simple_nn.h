@@ -31,7 +31,8 @@ namespace simple_nn
 	private:
 		void forward(const MatX<T>& X, bool is_training);
 		void classify(const MatX<T>& output, VecXi& classified);
-		void error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc);
+		/* void error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc); */
+		void error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc);
 		void loss_criterion(const MatX<T>& output, const VecXi& labels, T& loss_acc);
 		void zero_grad();
 		void backward(const MatX<T>& X);
@@ -83,7 +84,8 @@ namespace simple_nn
 
 		for (int e = 0; e < epochs; e++) {
 			T loss(0);
-			T error(0);
+			/* T error(0); */
+            float error(0);
 
 			system_clock::time_point start = system_clock::now();
 			for (int n = 0; n < n_batch; n++) {
@@ -110,7 +112,8 @@ namespace simple_nn
 			duration<float> sec = end - start;
 
 			T loss_valid(0); 
-			T error_valid(0);
+			/* T error_valid(0); */
+			float error_valid(0);
 
 			int n_batch_valid = valid_loader.size();
 			if (n_batch_valid != 0) {
@@ -128,10 +131,12 @@ namespace simple_nn
 			cout << fixed << setprecision(2);
 			cout << " - t: " << sec.count() << 's';
 			cout << " - loss: " << (loss / n_batch).reveal();
-			cout << " - error: " << (error / n_batch).reveal() * 100 << "%";
+			/* cout << " - error: " << (error / n_batch).reveal() * 100 << "%"; */
+			cout << " - error: " << (error / n_batch) * 100 << "%";
 			if (n_batch_valid != 0) {
 				cout << " - loss(valid): " << (loss_valid / n_batch_valid).reveal();
-				cout << " - error(valid): " << (error_valid / n_batch_valid).reveal() * 100 << "%";
+				/* cout << " - error(valid): " << (error_valid / n_batch_valid).reveal() * 100 << "%"; */
+				cout << " - error(valid): " << (error_valid / n_batch_valid) * 100 << "%";
 			}
 			cout << endl;
 		}
@@ -152,21 +157,33 @@ namespace simple_nn
 		// assume that the last layer is linear, not 2d.
 		assert(output.rows() == classified.size());
 
-		for (int i = 0; i < classified.size(); i++) {
-			output.row(i).maxCoeff(&classified[i]);
+        //loop over all elements in output and save them in float Matrix
+        MatXf output_float(output.rows(), output.cols());
+        for (int i = 0; i < output.rows(); i++) {
+            for (int j = 0; j < output.cols(); j++) {
+                output_float(i,j) = output(i,j).reveal();
+            }
+        }
+		
+        for (int i = 0; i < classified.size(); i++) {
+			/* output.row(i).maxCoeff(&classified[i]); */
+			output_float.row(i).maxCoeff(&classified[i]);
 		}
     }
 
     template<typename T>
-	void SimpleNN<T>::error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc)
+	void SimpleNN<T>::error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc)
+	/* void SimpleNN<T>::error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc) */
 	{
 		int batch = (int)classified.size();
 
-		T error(0);
+		/* T error(0); */
+        float error(0);
 		for (int i = 0; i < batch; i++) {
 			if (classified[i] != labels[i]) 
             {
-                error+=T(1);
+                error+=1;
+                /* error+=T(1); */
                 /* std::cout << "classified[i] = " << classified[i] << " labels[i] = " << labels[i] << "\n"; */
 		    }
         }
@@ -444,7 +461,8 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
 	{
 		int batch = data_loader.input_shape()[0];
 		int n_batch = data_loader.size();
-		T error_acc(0);
+		/* T error_acc(0); */
+        float error_acc(0);
 
 		MatX<T> X;
 		VecXi Y;
@@ -470,6 +488,7 @@ void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
 		cout << fixed << setprecision(2);
 		cout << " - t: " << sec.count() << "s";
 		cout << " - error(" << batch * n_batch << " images): ";
-		cout << error_acc.reveal() / (batch * n_batch) * 100 << "%" << endl;
+		/* cout << error_acc.reveal() / (batch * n_batch) * 100 << "%" << endl; */
+		cout << error_acc / (batch * n_batch) * 100 << "%" << endl;
 	}
 }

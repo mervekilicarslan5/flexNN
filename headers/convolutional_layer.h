@@ -105,9 +105,10 @@ namespace simple_nn
             
 
         }
-            /* for (int i = 0; i < this->output.size(); i++) { */
-            /*     this->output(i).mask_and_send_dot(); */
-            /* } */
+            T::communicate();
+            for (int i = 0; i < this->output.size(); i++) {
+                this->output(i).complete_mult();
+            }
 		for (int n = 0; n < batch; n++) {
 			this->output.block(oc * n, 0, oc, ohw).colwise() += bias;
 		}

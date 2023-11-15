@@ -65,8 +65,13 @@ namespace simple_nn
         }
             /* tmp_output2.row(n).noalias() = W * prev_out.row(n).transpose(); */
         }
+
+            T::communicate();
             /* for (int i = 0; i < this->output.size(); i++) */ 
             /*     this->output(i).mask_and_send_dot(); */
+            for (int i = 0; i < this->output.size(); i++) {
+                this->output(i).complete_mult();
+            }
 
 		    for (int n = 0; n < batch; n++) 
 			    this->output.row(n).noalias() += b;
