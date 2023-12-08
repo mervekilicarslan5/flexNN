@@ -177,6 +177,10 @@ void load_model(const Config& cfg, SimpleNN<T>& model)
 	}
 }
 
+
+
+
+/*OLD VERSION*/
 /* int main_old(int argc, char** argv) */
 /* { */
 /*     using DATATYPE = float; */
