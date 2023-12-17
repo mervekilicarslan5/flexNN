@@ -15,6 +15,19 @@ namespace simple_nn
 		FLATTEN
 	};
 
+    std::string toString(LayerType type) {
+    switch (type) {
+    case LayerType::LINEAR: return "LINEAR";
+    case LayerType::CONV2D: return "CONV2D";
+    case LayerType::MAXPOOL2D: return "MAXPOOL2D";
+    case LayerType::AVGPOOL2D: return "AVGPOOL2D";
+    case LayerType::ACTIVATION: return "ACTIVATION";
+    case LayerType::BATCHNORM1D: return "BATCHNORM1D";
+    case LayerType::BATCHNORM2D: return "BATCHNORM2D";
+    case LayerType::FLATTEN: return "FLATTEN";
+    default: return "Unknown LayerType";
+    }
+}
     template<typename T>
 	class Layer
 	{

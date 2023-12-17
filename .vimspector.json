@@ -1,0 +1,15 @@
+{
+    "configurations":{
+        "Launch":{
+            "adapter": "vscode-cpptools",
+            "configuration": {
+                "request": "launch",
+                "program": "simplenn",
+                "cwd": "~/workspace/templated/SimpleNN",
+                "externalConsole":true,
+                "MiMode": "gdb",
+                "args": ["--mode=test", "--save_dir=./model_zoo", "--pretrained=vgg16.bin"]
+            }
+        }
+    }
+}

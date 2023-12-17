@@ -19,6 +19,7 @@ namespace simple_nn
 		int kh;
 		int kw;
 		int pad;
+        int stride; // add stride
 		string option;
 		MatX<T> dkernel;
 		VecX<T> dbias;
@@ -26,8 +27,8 @@ namespace simple_nn
 	public:
 		MatX<T> kernel;
 		VecX<T> bias;
-		Conv2d(int in_channels, int out_channels, int kernel_size, int padding,
-			string option);
+		Conv2d(int in_channels, int out_channels, int kernel_size, int stride, int padding,
+			string option = "kaiming_uniform");
 		void set_layer(const vector<int>& input_shape) override;
 		void forward(const MatX<T>& prev_out, bool is_training) override;
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;
@@ -41,6 +42,7 @@ namespace simple_nn
 		int in_channels,
 		int out_channels,
 		int kernel_size,
+        int stride, // add stride
 		int padding,
 		string option
 	) :
@@ -56,6 +58,7 @@ namespace simple_nn
 		ohw(0),
 		kh(kernel_size),
 		kw(kernel_size),
+        stride(stride), // add stride
 		pad(padding),
 		option(option) {}
 
@@ -67,8 +70,8 @@ namespace simple_nn
 		ih = input_shape[2];
 		iw = input_shape[3];
 		ihw = ih * iw;
-		oh = calc_outsize(ih, kh, 1, pad);
-		ow = calc_outsize(iw, kw, 1, pad);
+		oh = calc_outsize(ih, kh, stride, pad);
+		ow = calc_outsize(iw, kw, stride, pad);
 		ohw = oh * ow;
 
 		this->output.resize(batch * oc, ohw);
@@ -90,7 +93,7 @@ namespace simple_nn
 	{
 		for (int n = 0; n < batch; n++) {
 			const T* im = prev_out.data() + (ic * ihw) * n;
-			im2col(im, ic, ih, iw, kh, 1, pad, im_col.data());
+			im2col(im, ic, ih, iw, kh, stride, pad, im_col.data());
 			/* tmp_output.block(oc * n, 0, oc, ohw).noalias() = tmp_kernel * tmp_im_col; */
             for(int i = 0; i < oc; ++i) {
                 for(int j = 0; j < ohw; ++j) {
@@ -109,6 +112,7 @@ namespace simple_nn
             for (int i = 0; i < this->output.size(); i++) {
                 this->output(i).complete_mult();
             }
+            /* std::cout << "Output size: " << this->output.size() << std::endl; */
 		for (int n = 0; n < batch; n++) {
 			this->output.block(oc * n, 0, oc, ohw).colwise() += bias;
 		}
@@ -119,7 +123,7 @@ namespace simple_nn
 	{
 		for (int n = 0; n < batch; n++) {
 			const T* im = prev_out.data() + (ic * ihw) * n;
-			im2col(im, ic, ih, iw, kh, 1, pad, im_col.data());
+			im2col(im, ic, ih, iw, kh, stride, pad, im_col.data());
 			dkernel += this->delta.block(oc * n, 0, oc, ohw) * im_col.transpose();
 			dbias += this->delta.block(oc * n, 0, oc, ohw).rowwise().sum();
 		}
@@ -128,7 +132,7 @@ namespace simple_nn
 			for (int n = 0; n < batch; n++) {
 				T* begin = prev_delta.data() + ic * ihw * n;
 				im_col = kernel.transpose() * this->delta.block(oc * n, 0, oc, ohw);
-				col2im(im_col.data(), ic, ih, iw, kh, 1, pad, begin);
+				col2im(im_col.data(), ic, ih, iw, kh, stride, pad, begin);
 			}
 		}
 	}

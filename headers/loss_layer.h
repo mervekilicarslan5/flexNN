@@ -38,8 +38,12 @@ namespace simple_nn
 				for (int i = 0; i < this->n_label; i++) {
 					loss = prev_delta(n, i);
 					/* loss_batch += 0.5f * loss * loss; */
-                    loss_batch += (loss * loss) / 2;
+                    loss_batch += (loss * loss);
 				}
+                loss_batch.mask_and_send_dot();
+                T::communicate();
+                loss_batch.complete_mult();
+                loss_batch = loss_batch / 2;
 				// loss_batch += 0.5f * prev_delta.row(n).pow(2).sum();
 			}
 			return loss_batch / this->batch;

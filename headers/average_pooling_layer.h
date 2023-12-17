@@ -1,5 +1,6 @@
 #pragma once
 #include "layer.h"
+#include <cmath>
 
 namespace simple_nn
 {
@@ -66,7 +67,8 @@ namespace simple_nn
         this->output.setZero();
 		T* out = this->output.data();
 		const T* pout = prev_out.data();
-		auto denominator = kh * kw;
+		float denominator = kh * kw;
+        /* int denominator = std::log2(kh * kw); */
 		for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < ch; c++) {
 				for (int i = 0; i < oh; i++) {
@@ -82,7 +84,10 @@ namespace simple_nn
 								}
 							}
 						}
-						out[out_idx] /= denominator;
+                        /* out[out_idx] = out[out_idx] >> denominator; */
+						out[out_idx] *= T(1/denominator);
+                        out[out_idx].complete_mult();
+                        /* out[out_idx] /= denominator; */
 					}
 				}
 			}

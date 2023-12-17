@@ -17,7 +17,7 @@ namespace simple_nn
 	public:
 		MatX<T> W;
 		RowVecX<T> b;
-		Linear(int in_features, int out_features, string option);
+		Linear(int in_features, int out_features, string option = "kaiming_uniform");
 		void set_layer(const vector<int>& input_shape) override;
 		void forward(const MatX<T>& prev_out, bool is_training) override;
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;

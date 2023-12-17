@@ -78,12 +78,12 @@ namespace simple_nn
 	void BatchNorm1d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
 		if (is_training) {
-			calc_batch_mu(prev_out);
-			calc_batch_var(prev_out);
+			/* calc_batch_mu(prev_out); */
+			/* calc_batch_var(prev_out); */
 			normalize_and_shift(prev_out, is_training);
 			// update moving mu and var
-			move_mu = move_mu * momentum + mu * (1 - momentum);
-			move_var = move_var * momentum + var * (1 - momentum);
+			/* move_mu = move_mu * momentum + mu * (1 - momentum); */
+			/* move_var = move_var * momentum + var * (1 - momentum); */
 		}
 		else {
 			normalize_and_shift(prev_out, is_training);
@@ -111,8 +111,8 @@ namespace simple_nn
     template<typename T>
 	void BatchNorm1d<T>::normalize_and_shift(const MatX<T>& prev_out, bool is_training)
 	{
-		const float* M = mu.data();
-		const float* V = var.data();
+		const T* M = mu.data();
+		const T* V = var.data();
 
 		if (!is_training) {
 			M = move_mu.data();
@@ -121,53 +121,69 @@ namespace simple_nn
 
 		for (int i = 0; i < batch; i++) {
 			for (int j = 0; j < n_feat; j++) {
-				xhat(i, j) = (prev_out(i, j) - M[j]) / std::sqrt(V[j] + eps);
-				this->output(i, j) = gamma[j] * xhat(i, j) + beta[j];
+				xhat(i, j) = (prev_out(i, j) - M[j]) * V[j];
+                xhat(i, j).mask_and_send_dot();
 			}
 		}
+        T::communicate();
+		for (int i = 0; i < batch; i++) {
+			for (int j = 0; j < n_feat; j++) {
+				xhat(i, j).complete_mult();
+				this->output(i, j) = gamma[j] * xhat(i, j);
+                this->output(i, j).mask_and_send_dot();
+			}
+		}
+        T::communicate();
+		for (int i = 0; i < batch; i++) {
+			for (int j = 0; j < n_feat; j++) {
+				this->output(i, j).complete_mult();
+                this->output(i, j) += beta[j];
+			}
+		}
+
 	}
 
     template<typename T>
 	void BatchNorm1d<T>::backward(const MatX<T>& prev_out, MatX<T>& prev_delta)
 	{
 		// calc dxhat
-		for (int i = 0; i < batch; i++) {
-			for (int j = 0; j < n_feat; j++) {
-				dxhat(i, j) = this->delta(i, j) * gamma[j];
-			}
-		}
+		/* for (int i = 0; i < batch; i++) { */
+		/* 	for (int j = 0; j < n_feat; j++) { */
+		/* 		dxhat(i, j) = this->delta(i, j) * gamma[j]; */
+		/* 	} */
+		/* } */
 
-		// calc Sum(dxhat), Sum(dxhat * xhat)
-		for (int i = 0; i < batch; i++) {
-			for (int j = 0; j < n_feat; j++) {
-				sum1[j] += dxhat(i, j);
-				sum2[j] += dxhat(i, j) * xhat(i, j);
-			}
-		}
+		/* // calc Sum(dxhat), Sum(dxhat * xhat) */
+		/* for (int i = 0; i < batch; i++) { */
+		/* 	for (int j = 0; j < n_feat; j++) { */
+		/* 		sum1[j] += dxhat(i, j); */
+		/* 		sum2[j] += dxhat(i, j) * xhat(i, j); */
+		/* 	} */
+		/* } */
 
-		// calc dx, dgamma, dbeta
-		float m = (float)batch;
-		for (int i = 0; i < batch; i++) {
-			for (int j = 0; j < n_feat; j++) {
-				prev_delta(i, j) = (m * dxhat(i, j)) - sum1[j] - (xhat(i, j) * sum2[j]);
-				prev_delta(i, j) /= m * std::sqrt(var[j] + eps);
-				dgamma[j] += xhat(i, j) * this->delta(i, j);
-				dbeta[j] += this->delta(i, j);
-			}
-		}
+		/* // calc dx, dgamma, dbeta */
+		/* float m = (float)batch; */
+		/* for (int i = 0; i < batch; i++) { */
+		/* 	for (int j = 0; j < n_feat; j++) { */
+		/* 		prev_delta(i, j) = (m * dxhat(i, j)) - sum1[j] - (xhat(i, j) * sum2[j]); */
+		/* 		prev_delta(i, j) /= m * std::sqrt(var[j] + eps); */
+		/* 		dgamma[j] += xhat(i, j) * this->delta(i, j); */
+		/* 		dbeta[j] += this->delta(i, j); */
+		/* 	} */
+		/* } */
 	}
 
     template<typename T>
 	void BatchNorm1d<T>::update_weight(float lr, float decay)
 	{
-		float t1 = (1 - (2 * lr * decay) / batch);
-		float t2 = lr / batch;
-		if (t1 != 1) {
-			gamma *= t1;
-			beta *= t1;
-		}
-		gamma -= t2 * dgamma;
-		beta -= t2 * dbeta;
+		/* float t1 = (1 - (2 * lr * decay) / batch); */
+		/* float t2 = lr / batch; */
+		/* if (t1 != 1) { */
+		/* 	gamma *= t1; */
+		/* 	beta *= t1; */
+		/* } */
+		/* gamma -= t2 * dgamma; */
+		/* beta -= t2 * dbeta; */
 	}
 
     template<typename T>

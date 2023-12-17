@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
-#define FRACTIONAL_VALUE 5
+#define FRACTIONAL_VALUE 10
 
 
 // General template definitions encapsulated inside a struct
@@ -41,7 +41,8 @@ static INT_TYPE twos_complement_to_int(UINT_TYPE val) {
     return static_cast<INT_TYPE>(val);
 }
 
-static INT_TYPE float_to_ufixed(float_type float_val) {
+static UINT_TYPE float_to_ufixed(float_type float_val) {
+    /* std::cout << "float_val: " << float_val << " ufixed: " << int_to_twos_complement(float_to_fixed(float_val)) << std::endl; */
     return int_to_twos_complement(float_to_fixed(float_val));
 }
 
@@ -94,7 +95,36 @@ UINT_TYPE floatToFixed(float_type val) {
     return FloatFixedConverter<float_type, INT_TYPE, UINT_TYPE, fractional>::floatToFixed(val);
 }
 
-
+/* template <typename Datatype, typename float_type, typename INT_TYPE, typename UINT_TYPE, int fractional> */
+/* void store_convert_vectorize(float val) */
+/* { */
+/*     UINT_TYPE fixVal = FloatFixedConverter<float_type, INT_TYPE, UINT_TYPE, fractional>::floatToFixed(val); */
+/*     Datatype vecVal = PROMOTE(fixVal); */
+/*     for(int i = 0; i < BITLENGTH; i++) */
+/*     { */
+/*         player_input[counter] = vecVal; */
+/*         counter++; */
+/*     } */
+/* } */
+/* template <typename Datatype, typename float_type, typename INT_TYPE, typename UINT_TYPE, int fractional> */
+/* void store_convert_ortho(float val[BITLENGTH][DATTYPE/BITLENGTH]) */
+/* { */
+/*     alignas(sizeof(DATATYPE)) UINT_TYPE fixVals[BITLENGTH][DATTYPE/BITLENGTH]; */
+/*     for(int i = 0; i < BITLENGTH; i++) */
+/*     { */
+/*         for(int j = 0; j < DATTYPE/BITLENGTH; j++) */
+/*         { */
+/*             fixVals[i][j] = FloatFixedConverter<float_type, INT_TYPE, UINT_TYPE, fractional>::floatToFixed(val[i][j]); */
+/*         } */
+/*     } */
+/*     orthogonalize_arithmetic((UINT_TYPE*) fixVals, (Datatype*) fixVals); */
+    
+/*     for(int i = 0; i < BITLENGTH; i++) */
+/*     { */
+/*         player_input[counter] = ((Datatype*) fixVals)[i]; */
+/*         counter++; */
+/*     } */
+/* } */
 
 template <typename T>
 T truncate(const T& val)
@@ -310,6 +340,13 @@ void operator-=(const Wrapper s){
     this->s1 -= s.s1;
 }
 
+/* Wrapper operator>>(const int s){ */
+/*     // Enable if INT_TYPE, Datatype, UINT_TYPE are not float or double */ 
+/*     INT_TYPE temp = static_cast<INT_TYPE>(this->s1); */ 
+/*     temp >>= s; */
+/*     return Wrapper(static_cast<UINT_TYPE>(temp), 0); */
+/* } */
+
 void operator*= (const Wrapper s){
 *this = *this * s;
 }
@@ -345,6 +382,8 @@ Wrapper relu() const{
     }
     else
     {
+        /* INT_TYPE temp = static_cast<INT_TYPE>(this->s1); */
+        /* return Wrapper(temp > 0 ? this->s1 : 0, 0); */
     bool isNegative = (this->s1 & (T(1) << (sizeof(T)*8 - 1))) != 0;
     if (!isNegative)
         return Wrapper(this->s1,0);

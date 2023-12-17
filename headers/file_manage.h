@@ -84,4 +84,39 @@ namespace simple_nn
 
 		return label;
 	}
+    // CIFAR-10 image dimensions and channels
+    const int CIFAR10_IMG_HEIGHT = 32;
+    const int CIFAR10_IMG_WIDTH = 32;
+    const int CIFAR10_IMG_CHANNELS = 3; // RGB channels
+
+    // Reads a single CIFAR-10 file and returns the images and labels
+    std::pair<MatXf, VecXi> read_cifar10_file(const std::string& filename, int n_imgs) {
+        std::ifstream file(filename, std::ios::binary);
+        MatXf images(n_imgs, CIFAR10_IMG_HEIGHT * CIFAR10_IMG_WIDTH * CIFAR10_IMG_CHANNELS);
+        VecXi labels(n_imgs);
+
+        if (file.is_open()) {
+            for (int i = 0; i < n_imgs; ++i) {
+                unsigned char label;
+                file.read((char*)&label, 1);
+                labels[i] = label;
+
+                for (int c = 0; c < CIFAR10_IMG_CHANNELS; ++c) {
+                    for (int h = 0; h < CIFAR10_IMG_HEIGHT; ++h) {
+                        for (int w = 0; w < CIFAR10_IMG_WIDTH; ++w) {
+                            unsigned char pixel = 0;
+                            file.read((char*)&pixel, sizeof(pixel));
+                            int index = c * CIFAR10_IMG_HEIGHT * CIFAR10_IMG_WIDTH + h * CIFAR10_IMG_WIDTH + w;
+                            images(i, index) = pixel / 255.0f;
+                        }
+                    }
+                }
+            }
+        } else {
+            std::cerr << "Failed to open file: " << filename << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        return std::make_pair(images, labels);
+    }
 }
