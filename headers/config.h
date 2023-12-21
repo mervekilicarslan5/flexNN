@@ -43,7 +43,7 @@ namespace simple_nn
 		activ("relu"),
 		init("kaiming_uniform"),
 		loss("cross_entropy"),
-		batch(8),
+		batch(1),
 		epoch(2),
 		lr(0.01f),
 		decay(0.02f),

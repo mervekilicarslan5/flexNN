@@ -35,6 +35,7 @@
       (29): ReLU(inplace=True)
       (30): AvgPool2d(kernel_size=2, stride=2, padding=0)
     )
+if classes == 10:
     (avgpool): AdaptiveAvgPool2d(output_size=(7, 7))
     (classifier): Sequential(
       (0): Linear(in_features=25088, out_features=4096, bias=True)
@@ -54,6 +55,8 @@
     (4): ReLU()
     (5): Linear(in_features=256, out_features=10, bias=True)
   )
+if classes == 100:
+
 )
 */
 
@@ -65,7 +68,7 @@
 using namespace simple_nn;
 
 template <typename T>
-void make_vgg16(SimpleNN<T> &net)
+void make_vgg16(SimpleNN<T> &net, int num_classes = 10)
 {
     net.add(new Conv2d<T>(3,64,3,1,1));
     net.add(new ReLU<T>());
@@ -99,18 +102,45 @@ void make_vgg16(SimpleNN<T> &net)
     net.add(new ReLU<T>());
     net.add(new AvgPool2d<T>(2,2));
     net.add(new AdaptiveAvgPool2d<T>(7,7));
+    
     net.add(new Flatten<T>());
     net.add(new Linear<T>(25088,4096));
     net.add(new ReLU<T>());
     net.add(new Linear<T>(4096,4096));
     net.add(new ReLU<T>());
     net.add(new Linear<T>(4096,1000));
-    /* net.add(new Flatten<T>()); */
-    net.add(new Linear<T>(512,256));
-    net.add(new ReLU<T>());
-    net.add(new Linear<T>(256,256));
-    net.add(new ReLU<T>());
-    net.add(new Linear<T>(256,10));
+
+    if(num_classes == 10)
+    {
+        /* net.add(new Flatten<T>()); */
+        net.add(new Linear<T>(512,256));
+        net.add(new ReLU<T>());
+        net.add(new Linear<T>(256,256));
+        net.add(new ReLU<T>());
+        net.add(new Linear<T>(256,10));
+    }
+    else if(num_classes == 200)
+    {
+        net.add(new AvgPool2d<T>(2,2));
+        net.add(new Flatten<T>());
+        net.add(new Linear<T>(512,512));
+        net.add(new ReLU<T>());
+        net.add(new Linear<T>(512,200));
+    }
+    else if(num_classes == 1000)
+    {
+        net.add(new AvgPool2d<T>(2,2));
+        /* net.add(new Flatten<T>()); */
+        net.add(new Linear<T>(4608,4096));
+        net.add(new Linear<T>(4096,4096));
+        net.add(new Linear<T>(4096,1000));
+    }
+    else
+    {
+        std::cout << "Error: num_classes must be 10, 200, or 1000" << std::endl;
+        exit(1);
+    }
+
 }
 
         

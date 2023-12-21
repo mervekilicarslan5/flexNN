@@ -9,6 +9,7 @@ namespace simple_nn
 		CONV2D,
 		MAXPOOL2D,
 		AVGPOOL2D,
+        ADAPTIVEAVGPOOL2D,
 		ACTIVATION,
 		BATCHNORM1D,
 		BATCHNORM2D,
@@ -21,6 +22,7 @@ namespace simple_nn
     case LayerType::CONV2D: return "CONV2D";
     case LayerType::MAXPOOL2D: return "MAXPOOL2D";
     case LayerType::AVGPOOL2D: return "AVGPOOL2D";
+    case LayerType::ADAPTIVEAVGPOOL2D: return "ADAPTIVEAVGPOOL2D";
     case LayerType::ACTIVATION: return "ACTIVATION";
     case LayerType::BATCHNORM1D: return "BATCHNORM1D";
     case LayerType::BATCHNORM2D: return "BATCHNORM2D";

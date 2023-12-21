@@ -39,7 +39,8 @@ namespace simple_nn
 		void backward(const MatX<T>& X);
 		void update_weight();
 		int count_params();
-		void write_or_read_params(fstream& fs, string mode);
+        template<typename S>
+		void write_or_read_params(S& fs, string mode);
 	};
 
     template<typename T>
@@ -185,6 +186,7 @@ namespace simple_nn
 		/* T error(0); */
         int error(0);
 		for (int i = 0; i < batch; i++) {
+            std::cout << "classified[i] = " << classified[i] << " labels[i] = " << labels[i] << "\n";
 			if (classified[i] != labels[i]) 
             {
                 error+=1;
@@ -252,6 +254,23 @@ namespace simple_nn
     template<typename T>
 	void SimpleNN<T>::load(string save_dir, string fname)
 	{
+        if("dummy" == fname)
+        {
+            //create fake filestream with total_params*4 bytes
+            int k = count_params();
+              std::stringstream ss;
+    // Generate k random floating point numbers and write them to the stringstream
+    for (int i = 0; i < k; ++i) {
+        /* ss << static_cast<float>(rand()) / RAND_MAX << " "; */
+        ss << 1.0f << " ";
+    }
+    // Create a file stream and open it in read/write mode
+    ss.seekg(0, std::ios::beg); 
+    write_or_read_params(ss, "read");
+	cout << "Pretrained weights are loaded." << endl;
+    return;
+
+        }
 		string path = save_dir + "/" + fname;
 		fstream fin(path, ios::in | ios::binary);
 
@@ -462,7 +481,8 @@ namespace simple_nn
 
 
 template<typename T>
-void SimpleNN<T>::write_or_read_params(fstream& fs, string mode)
+template<typename S>
+void SimpleNN<T>::write_or_read_params(S& fs, string mode)
 {
     for (Layer<T>* l : net) {
         vector<float> tempMatrix1, tempMatrix2, tempMatrix3, tempMatrix4; // Temporary vectors for parameter storage

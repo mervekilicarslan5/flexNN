@@ -55,14 +55,29 @@ namespace simple_nn
 	void Linear<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
 		for (int n = 0; n < batch; n++) {
-            for(int i = 0; i < W.rows(); ++i) {
-            T sum = T(0);
-            for(int j = 0; j < W.cols(); ++j) {
-                sum += (W(i, j) * prev_out(n, j));  // Use custom * and + operators
+            auto lW = W.data();
+            auto lprev_out = prev_out.data();
+            auto loutput = this->output.data();
+            auto w_rows = W.rows();
+            auto w_cols = W.cols();
+            auto prev_out_cols = prev_out.cols();
+            auto output_cols = this->output.cols();
+            for(int i = 0; i < w_rows; ++i) {
+                T sum = T(0);
+                for(int j = 0; j < w_cols; ++j) {
+                    sum += (lW[i * w_cols + j] * lprev_out[n * prev_out_cols + j]);  // Use custom * and + operators
+                }
+                sum.mask_and_send_dot(); // send immediately to utilize network better
+                loutput[n * output_cols + i] = sum;
             }
-            sum.mask_and_send_dot(); // send immediately to utilize network better
-            this->output(n, i) = sum;
-        }
+            /* for(int i = 0; i < W.rows(); ++i) { */
+            /* T sum = T(0); */
+            /* for(int j = 0; j < W.cols(); ++j) { */
+            /*     sum += (W(i, j) * prev_out(n, j));  // Use custom * and + operators */
+            /* } */
+            /* sum.mask_and_send_dot(); // send immediately to utilize network better */
+            /* this->output(n, i) = sum; */
+        /* } */
             /* tmp_output2.row(n).noalias() = W * prev_out.row(n).transpose(); */
         }
 

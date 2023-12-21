@@ -30,7 +30,7 @@ namespace simple_nn
 
     template<typename T>
     AdaptiveAvgPool2d<T>::AdaptiveAvgPool2d(int target_oh, int target_ow) :
-        Layer<T>(LayerType::AVGPOOL2D), oh(target_oh), ow(target_ow) {}
+        Layer<T>(LayerType::ADAPTIVEAVGPOOL2D), oh(target_oh), ow(target_ow) {}
 
     template<typename T>
 void AdaptiveAvgPool2d<T>::set_layer(const std::vector<int>& input_shape)
