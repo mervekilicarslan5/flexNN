@@ -20,10 +20,11 @@ namespace simple_nn
 		int kh;
 		int kw;
 		int stride;
+        int pad;
 		MatX<T> im_col;
 		vector<int> indices;
 	public:
-		MaxPool2d(int kernel_size, int stride);
+		MaxPool2d(int kernel_size, int stride, int pad = 0);
 		void set_layer(const vector<int>& input_shape) override;
 		void forward(const MatX<T>& prev_out, bool is_training) override;
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;
@@ -32,7 +33,7 @@ namespace simple_nn
 	};
 
     template<typename T>
-	MaxPool2d<T>::MaxPool2d(int kernel_size, int stride) :
+	MaxPool2d<T>::MaxPool2d(int kernel_size, int stride, int pad) :
 		Layer<T>(LayerType::MAXPOOL2D),
 		batch(0),
 		ch(0),
@@ -44,7 +45,8 @@ namespace simple_nn
 		ohw(0),
 		kh(kernel_size),
 		kw(kernel_size),
-		stride(stride) {}
+		stride(stride),
+        pad(pad){}
 
     template<typename T>
 	void MaxPool2d<T>::set_layer(const vector<int>& input_shape)
@@ -54,8 +56,8 @@ namespace simple_nn
 		ih = input_shape[2];
 		iw = input_shape[3];
 		ihw = ih * iw;
-		oh = calc_outsize(ih, kh, stride, 0);
-		ow = calc_outsize(iw, kw, stride, 0);
+		oh = calc_outsize(ih, kh, stride, pad);
+		ow = calc_outsize(iw, kw, stride, pad);
 		ohw = oh * ow;
 
 		this->output.resize(batch * ch, ohw);
@@ -78,13 +80,19 @@ namespace simple_nn
 						int max_idx = -1;
 						for (int y = 0; y < kh; y++) {
 							for (int x = 0; x < kw; x++) {
-								int ii = i * stride + y;
-								int jj = j * stride + x;
+								/* int ii = i * stride + y; */
+								/* int jj = j * stride + x; */
+                                int ii = i * stride + y - pad;
+                                int jj = j * stride + x - pad;
 								int pout_idx = jj + iw * (ii + ih * (c + ch * n));
 								T val = T(FLOAT_MIN);
 								if (ii >= 0 && ii < ih && jj >= 0 && jj < iw) {
 									val = pout[pout_idx];
 								}
+                                else if (pad > 0)
+                                {
+                                    val = T(0);
+                                }
 								if (val > max) {
 									max = val;
 									max_idx = pout_idx;

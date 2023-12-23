@@ -18,19 +18,20 @@ namespace simple_nn
     template<typename T>
 	class SimpleNN
 	{
-	private:
+	protected:
 		vector<Layer<T>*> net;
 		Optimizer* optim;
 		Loss<T>* loss;
 	public:
 		void add(Layer<T>* layer);
-		void compile(vector<int> input_shape, Optimizer* optim=nullptr, Loss<T>* loss=nullptr);
+		virtual void compile(vector<int> input_shape, Optimizer* optim=nullptr, Loss<T>* loss=nullptr);
 		void fit(const DataLoader<T>& train_loader, int epochs, const DataLoader<T>& valid_loader);
 		void save(string save_dir, string fname);
 		void load(string save_dir, string fname);
 		void evaluate(const DataLoader<T>& data_loader);
+        MatX<T> forward_return(const MatX<T>& X, bool is_training);
 	private:
-		void forward(const MatX<T>& X, bool is_training);
+		virtual void forward(const MatX<T>& X, bool is_training);
 		void classify(const MatX<T>& output, VecXi& classified);
 		/* void error_criterion(const VecXi& classified, const VecXi& labels, T& error_acc); */
 		void error_criterion(const VecXi& classified, const VecXi& labels, float& error_acc);
@@ -143,17 +144,30 @@ namespace simple_nn
 			cout << endl;
 		}
 	}
+		
+    template<typename T>
+	MatX<T> SimpleNN<T>::forward_return(const MatX<T>& X, bool is_training)
+	{
+        MatX<T> x = X;
+		for (int l = 0; l < net.size(); l++) 
+            x = net[l]->forward_return(x, is_training);
+        return x;
+    }
+
 
     template<typename T>
 	void SimpleNN<T>::forward(const MatX<T>& X, bool is_training)
 	{
 		for (int l = 0; l < net.size(); l++) {
-            std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+            /* std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now(); */
 			if (l == 0) net[l]->forward(X, is_training);
 			else net[l]->forward(net[l - 1]->output, is_training);
-            std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-            std::cout << "Layer " << toString(net[l]->type) << " took " << time_span.count() << " seconds.\n";
+            
+            
+
+            /* std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now(); */
+            /* std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end - start); */
+            /* std::cout << "Layer " << toString(net[l]->type) << " took " << time_span.count() << " seconds.\n"; */
 		}
 	}
 
@@ -186,7 +200,7 @@ namespace simple_nn
 		/* T error(0); */
         int error(0);
 		for (int i = 0; i < batch; i++) {
-            std::cout << "classified[i] = " << classified[i] << " labels[i] = " << labels[i] << "\n";
+            /* std::cout << "classified[i] = " << classified[i] << " labels[i] = " << labels[i] << "\n"; */
 			if (classified[i] != labels[i]) 
             {
                 error+=1;
@@ -283,9 +297,11 @@ namespace simple_nn
 		fin.read((char*)&total_params, sizeof(int));
 
 		if (total_params != count_params()) {
-			cout << "The number of parameters does not match." << endl;
-            cout << "total_params = " << total_params << " count_params = " << count_params() << "\n";
+			cout << "The number of parameters does not match." << "\n";
+            cout << "Loaded Parameters = " << total_params << " Compiled Parameters = " << count_params() << "\n";
 			fin.close();
+                        cout << " " << total_params << " " << count_params() << "\n";
+
 			exit(1);
 		}
 
@@ -301,16 +317,22 @@ namespace simple_nn
 	int SimpleNN<T>::count_params()
 	{
 		int total_params = 0;
+        int counter = 0;
 		for (const Layer<T>* l : net) {
+            /* std::cout << "\n"; */
+            /* std::cout << "Layer: " << counter << ", " << "Layer Type: " << toString(l->type); */
+            counter++;
 			if (l->type == LayerType::LINEAR) {
 				const Linear<T>* lc = dynamic_cast<const Linear<T>*>(l);
 				total_params += (int)lc->W.size();
 				total_params += (int)lc->b.size();
+                /* std::cout << ": " << (int)lc->W.size() << " " << (int)lc->b.size() << "\n"; */
 			}
 			else if (l->type == LayerType::CONV2D) {
 				const Conv2d<T>* lc = dynamic_cast<const Conv2d<T>*>(l);
 				total_params += (int)lc->kernel.size();
 				total_params += (int)lc->bias.size();
+                /* std::cout << " : " << (int)lc->kernel.size() << " " << (int)lc->bias.size() << "\n"; */
 			}
 			else if (l->type == LayerType::BATCHNORM1D) {
 				const BatchNorm1d<T>* lc = dynamic_cast<const BatchNorm1d<T>*>(l);
@@ -318,6 +340,7 @@ namespace simple_nn
 				total_params += (int)lc->move_var.size();
 				total_params += (int)lc->gamma.size();
 				total_params += (int)lc->beta.size();
+                /* std::cout << " : " << (int)lc->move_mu.size() << " " << (int)lc->move_var.size() << " " << (int)lc->gamma.size() << " " << (int)lc->beta.size() << "\n"; */
 			}
 			else if (l->type == LayerType::BATCHNORM2D) {
 				const BatchNorm2d<T>* lc = dynamic_cast<const BatchNorm2d<T>*>(l);
@@ -325,6 +348,7 @@ namespace simple_nn
 				total_params += (int)lc->move_var.size();
 				total_params += (int)lc->gamma.size();
 				total_params += (int)lc->beta.size();
+                /* std::cout << " : " << (int)lc->move_mu.size() << " " << (int)lc->move_var.size() << " " << (int)lc->gamma.size() << " " << (int)lc->beta.size() << "\n"; */
 			}
 			else {
 				continue;
@@ -763,9 +787,9 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
 			classify(net.back()->output, classified);
 			error_criterion(classified, Y, error_acc);
 			
-			cout << "[Batch: " << setw(3) << n + 1 << "/" << n_batch << "]";
+            std::cout << "[Batch: " << setw(3) << n + 1 << "/" << n_batch << "]";
 			if (n + 1 < n_batch) {
-				cout << "\r";
+                std::cout << "\r" << std::flush; 
 			}
 		}
 		system_clock::time_point end = system_clock::now();

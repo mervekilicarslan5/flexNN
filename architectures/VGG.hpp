@@ -101,18 +101,18 @@ void make_vgg16(SimpleNN<T> &net, int num_classes = 10)
     net.add(new Conv2d<T>(512,512,3,1,1));
     net.add(new ReLU<T>());
     net.add(new AvgPool2d<T>(2,2));
-    net.add(new AdaptiveAvgPool2d<T>(7,7));
+    /* net.add(new AdaptiveAvgPool2d<T>(7,7)); */
     
-    net.add(new Flatten<T>());
-    net.add(new Linear<T>(25088,4096));
-    net.add(new ReLU<T>());
-    net.add(new Linear<T>(4096,4096));
-    net.add(new ReLU<T>());
-    net.add(new Linear<T>(4096,1000));
+    /* net.add(new Flatten<T>()); */
+    /* net.add(new Linear<T>(25088,4096)); */
+    /* net.add(new ReLU<T>()); */
+    /* net.add(new Linear<T>(4096,4096)); */
+    /* net.add(new ReLU<T>()); */
+    /* net.add(new Linear<T>(4096,1000)); */
 
     if(num_classes == 10)
     {
-        /* net.add(new Flatten<T>()); */
+        net.add(new Flatten<T>());
         net.add(new Linear<T>(512,256));
         net.add(new ReLU<T>());
         net.add(new Linear<T>(256,256));
@@ -130,7 +130,7 @@ void make_vgg16(SimpleNN<T> &net, int num_classes = 10)
     else if(num_classes == 1000)
     {
         net.add(new AvgPool2d<T>(2,2));
-        /* net.add(new Flatten<T>()); */
+        net.add(new Flatten<T>());
         net.add(new Linear<T>(4608,4096));
         net.add(new Linear<T>(4096,4096));
         net.add(new Linear<T>(4096,1000));

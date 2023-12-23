@@ -47,5 +47,9 @@ namespace simple_nn
 		virtual void update_weight(float lr, float decay) { return; }
 		virtual void zero_grad() { return; }
 		virtual vector<int> output_shape() = 0;
+        MatX<T>& forward_return(const MatX<T>& prev_out, bool is_training = true) {
+            forward(prev_out, is_training);
+            return output;
+        }
 	};
 }
