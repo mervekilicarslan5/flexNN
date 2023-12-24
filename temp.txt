@@ -1,0 +1,168 @@
+User Configurations:
+  --mode          = test
+  --model         = lenet5
+  --data_dir      = ./dataset
+  --save_dir      = ./model_zoo
+  --pretrained    = ResNet50_cifar.bin
+  --pool          = avg
+  --activ         = relu
+  --init          = kaiming_uniform
+  --loss          = cross_entropy
+  --batch         = 1
+  --epoch         = 2
+  --lr            = 0.01
+  --decay         = 0.02
+  --use_batchnorm = 1
+  --shuffle_train = 1
+  --shuffle_test  = 0
+Dataset loaded.
+Model construction completed.
+4
+12
+14
+14
+15
+23
+24
+32
+33
+41
+43
+43
+44
+52
+53
+61
+62
+70
+71
+79
+81
+81
+82
+90
+91
+99
+100
+108
+109
+117
+118
+126
+127
+135
+137
+137
+138
+146
+147
+155
+Layer: 0, Layer Type: CONV2D
+Layer: 1, Layer Type: BATCHNORM2D
+Layer: 4, Layer Type: CONV2D
+Layer: 5, Layer Type: BATCHNORM2D
+Layer: 7, Layer Type: CONV2D
+Layer: 8, Layer Type: BATCHNORM2D
+Layer: 10, Layer Type: CONV2D
+Layer: 11, Layer Type: BATCHNORM2D
+Layer: 12, Layer Type: CONV2D
+Layer: 13, Layer Type: BATCHNORM2D
+Layer: 15, Layer Type: CONV2D
+Layer: 16, Layer Type: BATCHNORM2D
+Layer: 18, Layer Type: CONV2D
+Layer: 19, Layer Type: BATCHNORM2D
+Layer: 21, Layer Type: CONV2D
+Layer: 22, Layer Type: BATCHNORM2D
+Layer: 24, Layer Type: CONV2D
+Layer: 25, Layer Type: BATCHNORM2D
+Layer: 27, Layer Type: CONV2D
+Layer: 28, Layer Type: BATCHNORM2D
+Layer: 30, Layer Type: CONV2D
+Layer: 31, Layer Type: BATCHNORM2D
+Layer: 33, Layer Type: CONV2D
+Layer: 34, Layer Type: BATCHNORM2D
+Layer: 36, Layer Type: CONV2D
+Layer: 37, Layer Type: BATCHNORM2D
+Layer: 39, Layer Type: CONV2D
+Layer: 40, Layer Type: BATCHNORM2D
+Layer: 41, Layer Type: CONV2D
+Layer: 42, Layer Type: BATCHNORM2D
+Layer: 44, Layer Type: CONV2D
+Layer: 45, Layer Type: BATCHNORM2D
+Layer: 47, Layer Type: CONV2D
+Layer: 48, Layer Type: BATCHNORM2D
+Layer: 50, Layer Type: CONV2D
+Layer: 51, Layer Type: BATCHNORM2D
+Layer: 53, Layer Type: CONV2D
+Layer: 54, Layer Type: BATCHNORM2D
+Layer: 56, Layer Type: CONV2D
+Layer: 57, Layer Type: BATCHNORM2D
+Layer: 59, Layer Type: CONV2D
+Layer: 60, Layer Type: BATCHNORM2D
+Layer: 62, Layer Type: CONV2D
+Layer: 63, Layer Type: BATCHNORM2D
+Layer: 65, Layer Type: CONV2D
+Layer: 66, Layer Type: BATCHNORM2D
+Layer: 68, Layer Type: CONV2D
+Layer: 69, Layer Type: BATCHNORM2D
+Layer: 71, Layer Type: CONV2D
+Layer: 72, Layer Type: BATCHNORM2D
+Layer: 74, Layer Type: CONV2D
+Layer: 75, Layer Type: BATCHNORM2D
+Layer: 77, Layer Type: CONV2D
+Layer: 78, Layer Type: BATCHNORM2D
+Layer: 79, Layer Type: CONV2D
+Layer: 80, Layer Type: BATCHNORM2D
+Layer: 82, Layer Type: CONV2D
+Layer: 83, Layer Type: BATCHNORM2D
+Layer: 85, Layer Type: CONV2D
+Layer: 86, Layer Type: BATCHNORM2D
+Layer: 88, Layer Type: CONV2D
+Layer: 89, Layer Type: BATCHNORM2D
+Layer: 91, Layer Type: CONV2D
+Layer: 92, Layer Type: BATCHNORM2D
+Layer: 94, Layer Type: CONV2D
+Layer: 95, Layer Type: BATCHNORM2D
+Layer: 97, Layer Type: CONV2D
+Layer: 98, Layer Type: BATCHNORM2D
+Layer: 100, Layer Type: CONV2D
+Layer: 101, Layer Type: BATCHNORM2D
+Layer: 103, Layer Type: CONV2D
+Layer: 104, Layer Type: BATCHNORM2D
+Layer: 106, Layer Type: CONV2D
+Layer: 107, Layer Type: BATCHNORM2D
+Layer: 109, Layer Type: CONV2D
+Layer: 110, Layer Type: BATCHNORM2D
+Layer: 112, Layer Type: CONV2D
+Layer: 113, Layer Type: BATCHNORM2D
+Layer: 115, Layer Type: CONV2D
+Layer: 116, Layer Type: BATCHNORM2D
+Layer: 118, Layer Type: CONV2D
+Layer: 119, Layer Type: BATCHNORM2D
+Layer: 121, Layer Type: CONV2D
+Layer: 122, Layer Type: BATCHNORM2D
+Layer: 124, Layer Type: CONV2D
+Layer: 125, Layer Type: BATCHNORM2D
+Layer: 127, Layer Type: CONV2D
+Layer: 128, Layer Type: BATCHNORM2D
+Layer: 130, Layer Type: CONV2D
+Layer: 131, Layer Type: BATCHNORM2D
+Layer: 133, Layer Type: CONV2D
+Layer: 134, Layer Type: BATCHNORM2D
+Layer: 135, Layer Type: CONV2D
+Layer: 136, Layer Type: BATCHNORM2D
+Layer: 138, Layer Type: CONV2D
+Layer: 139, Layer Type: BATCHNORM2D
+Layer: 141, Layer Type: CONV2D
+Layer: 142, Layer Type: BATCHNORM2D
+Layer: 144, Layer Type: CONV2D
+Layer: 145, Layer Type: BATCHNORM2D
+Layer: 147, Layer Type: CONV2D
+Layer: 148, Layer Type: BATCHNORM2D
+Layer: 150, Layer Type: CONV2D
+Layer: 151, Layer Type: BATCHNORM2D
+Layer: 153, Layer Type: CONV2D
+Layer: 154, Layer Type: BATCHNORM2D
+Layer: 158, Layer Type: LINEAR
+Loading Model Parameters...
+Pretrained weights are loaded.

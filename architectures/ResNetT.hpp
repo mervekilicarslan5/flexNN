@@ -140,10 +140,12 @@ public:
         this->add(new BatchNorm2d<T>());
         this->add( new ReLU<T>());
         this->add( new MaxPool2d<T>(3, 2, 1));
+        /* this->add( new AvgPool2d<T>(3, 2)); */
         this->make_layer( residual_blocks[0], 64, 1, option);
         this->make_layer( residual_blocks[1], 128, 2, option);
         this->make_layer( residual_blocks[2], 256, 2, option);
         this->make_layer( residual_blocks[3], 512, 2, option);
+        /* this->add( new AvgPool2d<T>(1, 1)); */
         this->add( new AdaptiveAvgPool2d<T>(1, 1));
         this->add( new Flatten<T>());
         this->add(new Linear<T>(512 * 4, num_classes, option));
@@ -215,10 +217,10 @@ public:
                         else if(this->identity_layers_type[i] == "Identity_ADD") {
                             out += identity;
                         }
-                    }
                     i++;
                     if(i >= this->identity_layers.size()) {
                         break;
+                    }
                     }
 
             }
@@ -245,27 +247,24 @@ public:
 		// set network
         int i = 0;
 
-        for( int e : identity_layers) {
-            std::cout << e << std::endl;
-        }
 		for (int l = 0; l < this->net.size(); l++) {
             if(this->identity_layers.size() != 0 && i < this->identity_layers.size()) {
                 while(this->identity_layers[i] == l)  { 
                         if(this->identity_layers_type[i] == "Identity_Store") {
                             identity = out; //store identity of current layer
-                            std::cout << "Identity_Store" << std::endl;
+                            /* std::cout << "Identity_Store" << std::endl; */
                         }
                         else if(this->identity_layers_type[i] == "Identity_OP_Start") {
                             //network starts operating on identity, storing last output
                             temp = out; 
                             out = identity;
-                            std::cout << "Identity_OP_Start" << std::endl;
+                            /* std::cout << "Identity_OP_Start" << std::endl; */
                         }
                         else if(this->identity_layers_type[i] == "Identity_OP_Finish") {
                             //network finished processing identity, loading back last output
                             identity = out;
                             out = temp;
-                            std::cout << "Identity_OP_Finish" << std::endl;
+                            /* std::cout << "Identity_OP_Finish" << std::endl; */
                         }
                     i++;
                     if(i >= this->identity_layers.size()) {
@@ -274,16 +273,23 @@ public:
                     }
 
             }
-            std::cout << "Layer: " << l << ", Layer Type: " << toString(this->net[l]->type) << std::endl;
+            /* if (toString(this->net[l]->type) == "LINEAR" || toString(this->net[l]->type) == "BATCHNORM2D" || toString(this->net[l]->type) == "CONV2D") */
+            /* { */
+            /* std::cout << "Layer: " << l << ", Layer Type: " << toString(this->net[l]->type) << std::endl; */
+            /* } */
             this->net[l]->set_layer(out);
             out = this->net[l]->output_shape();
-		}
+		
+        }
 
 		// set Loss layer
 		if (loss != nullptr) {
 			loss->set_layer(this->net.back()->output_shape());
-		}
 	}
+	}
+
+        
+        
 
 
 

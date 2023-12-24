@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	cfg.parse(argc, argv);
 	cfg.print_config();
 
-	int n_train = 60000, n_test = 32, ch = 3, h = 32, w = 32, num_classes = 10;
+	int n_train = 60000, n_test = 1000, ch = 3, h = 32, w = 32, num_classes = 10;
 
 	/* MatX<float> train_X, test_X; */
 
@@ -63,6 +63,8 @@ int main(int argc, char** argv)
 
     auto test_X = read_custom_images("./dataset/cifar10-test-images.bin", n_test * ch, ch, h, w);
     auto test_Y = read_custom_labels("./dataset/cifar10-test-labels.bin", n_test * ch);
+    /* auto test_X = read_custom_images("./dataset/cifar10-test-images.bin", n_test * ch, ch, h, w); */
+    /* auto test_Y = read_custom_labels("./dataset/cifar10-test-labels.bin", n_test * ch); */
     /* auto test_X = read_dummy_images(n_test, ch, h, w); */
     /* auto test_Y = read_dummy_labels(n_test); */
     
