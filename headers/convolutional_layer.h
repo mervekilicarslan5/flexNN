@@ -111,7 +111,6 @@ namespace simple_nn
             /* std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1); */
             /* std::cout << "im2col time: " << time_span.count() << " seconds." << std::endl; */
 			/* tmp_output.block(oc * n, 0, oc, ohw).noalias() = tmp_kernel * tmp_im_col; */
-            this->output.block(oc * n, 0, oc, ohw).noalias() = kernel * im_col;
             /* t1 = std::chrono::high_resolution_clock::now(); */
             /* for(int i = 0; i < oc; ++i) { */
         /* for(int k = 0; k < kernel.cols(); ++k) { */
@@ -246,42 +245,42 @@ namespace simple_nn
 
 
 
-            /* auto A = kernel.data(); */
-    /* /1* auto B = im_col.transpose().data(); *1/ */
-    /* MatX<T> BM = im_col.transpose(); */
-    /* auto B = BM.data(); */
-    /* auto C = this->output.data() + (oc * ohw) * n; */
+            auto A = kernel.data();
+    /* auto B = im_col.transpose().data(); */
+    MatX<T> BM = im_col.transpose();
+    auto B = BM.data();
+    auto C = this->output.data() + (oc * ohw) * n;
     
-    /* const int m = oc; */
-    /* const int f = kernel.cols(); */
-    /* const int p = ohw; */
-    /* const int TILE_SIZE = 64; */
+    const int m = oc;
+    const int f = kernel.cols();
+    const int p = ohw;
+    const int TILE_SIZE = 64;
 
 
-  /* for (int i = 0; i < m; i += TILE_SIZE) { */
-        /* int i_max = std::min(i + TILE_SIZE, m); */
-        /* for (int j = 0; j < p; j += TILE_SIZE) { */
-            /* int j_max = std::min(j + TILE_SIZE, p); */
-            /* for (int k = 0; k < f; k += TILE_SIZE) { */
-            /*     int k_max = std::min(k + TILE_SIZE, f); */
-            /*         for (int jj = j; jj < j_max; ++jj) { */
-            /*     for (int ii = i; ii < i_max; ++ii) { */
-            /*         /1* const int row2 = ii*f+kk; *1/ */
-            /*             T temp_sum = T(0); */
-            /*             for (int kk = k; kk < k_max; ++kk) { */
-            /*            temp_sum += A[ii*f+kk] * B[jj*f + kk]; */ 
-            /*             } */
-            /*             C[ii*p + jj] += temp_sum; */
-            /*         } */
-            /*     } */
-            /* } */
-            /* for (int ii = i; ii < i_max; ++ii) { */
-            /*     for (int jj = j; jj < j_max; ++jj) { */
-            /*         C[ii*p + jj].mask_and_send_dot(); */
-            /*     } */
-            /* } */
-        /* } */
-    /* } */
+  for (int i = 0; i < m; i += TILE_SIZE) {
+        int i_max = std::min(i + TILE_SIZE, m);
+        for (int j = 0; j < p; j += TILE_SIZE) {
+            int j_max = std::min(j + TILE_SIZE, p);
+            for (int k = 0; k < f; k += TILE_SIZE) {
+                int k_max = std::min(k + TILE_SIZE, f);
+                    for (int jj = j; jj < j_max; ++jj) {
+                for (int ii = i; ii < i_max; ++ii) {
+                    /* const int row2 = ii*f+kk; */
+                        T temp_sum = T(0);
+                        for (int kk = k; kk < k_max; ++kk) {
+                       temp_sum += A[ii*f+kk] * B[jj*f + kk]; 
+                        }
+                        C[ii*p + jj] += temp_sum;
+                    }
+                }
+            }
+            for (int ii = i; ii < i_max; ++ii) {
+                for (int jj = j; jj < j_max; ++jj) {
+                    C[ii*p + jj].mask_and_send_dot();
+                }
+            }
+        }
+    }
 
 
 
@@ -303,9 +302,9 @@ namespace simple_nn
 
         }
         /* std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now(); */
-            for (int i = 0; i < this->output.size(); i++) {
-                this->output(i).mask_and_send_dot();
-            }
+            /* for (int i = 0; i < this->output.size(); i++) { */
+            /*     this->output(i).mask_and_send_dot(); */
+            /* } */
             T::communicate();
             for (int i = 0; i < this->output.size(); i++) {
                 this->output(i).complete_mult();

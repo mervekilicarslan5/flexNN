@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
-#define FRACTIONAL_VALUE 10
+#define FRACTIONAL_VALUE 5
 
 
 // General template definitions encapsulated inside a struct

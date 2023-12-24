@@ -3,8 +3,7 @@
 #include "headers/config.h"
 #include <cstdint>
 #include <sys/types.h>
-#include "architectures/VGG.hpp"
-#include "architectures/LeNet.hpp"
+#include "architectures/CNNs.hpp"
 #include "architectures/ResNetT.hpp"
 using namespace std;
 using namespace simple_nn;
@@ -27,7 +26,7 @@ int main(int argc, char** argv)
 	cfg.parse(argc, argv);
 	cfg.print_config();
 
-	int n_train = 60000, n_test = 1000, ch = 3, h = 32, w = 32, num_classes = 10;
+	int n_train = 60000, n_test = 10000, ch = 3, h = 32, w = 32, num_classes = 10;
 
 	/* MatX<float> train_X, test_X; */
 
@@ -78,6 +77,7 @@ int main(int argc, char** argv)
     /* SimpleNN<SHARETYPE> model; */
     /* make_vgg16(model, num_classes); */
     ResNet<SHARETYPE> model = ResNet50<SHARETYPE>(num_classes, cfg.init, ch);
+    /* AlexNet_32<SHARETYPE> model = AlexNet_32<SHARETYPE>(num_classes); */
 
 
     /* make_lenet(model, num_classes); */
