@@ -802,4 +802,50 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
 		/* cout << error_acc.reveal() / (batch * n_batch) * 100 << "%" << endl; */
 		cout << error_acc / (batch * n_batch) * 100 << "%" << endl;
 	}
+    template<typename T>
+void SimpleNN<T>::evaluate_quant(const DataLoader<T>& data_loader) {
+    int batch = data_loader.input_shape()[0];
+    int n_batch = data_loader.size();
+    float error_acc = 0;
+
+    MatX<T> X;
+    VecXi Y;
+    VecXi classified(batch);
+
+    auto start = system_clock::now();
+    for (int n = 0; n < n_batch; n++) {
+        X = data_loader.get_x(n); 
+        Y = data_loader.get_y(n);
+
+        // Quantize the input before feeding it into the network
+        MatX<int8_t> qX;
+        Quantization::quantize_batch(X, qX, input_scale, input_zero_point);  // Use the appropriate scale and zero point
+
+        // Perform forward pass with quantized input
+        forward(qX, false);
+
+        // Dequantize output if necessary before classification
+        MatX<T> dequantized_output;
+        Quantization::dequantize_batch(net.back()->output, dequantized_output, output_scale, output_zero_point);
+
+        // Classify based on the dequantized output
+        classify(dequantized_output, classified);
+
+        error_criterion(classified, Y, error_acc);
+        
+        std::cout << "[Batch: " << setw(3) << n + 1 << "/" << n_batch << "]";
+        if (n + 1 < n_batch) {
+            std::cout << "\r" << std::flush; 
+        }
+    }
+
+    auto end = system_clock::now();
+    duration<float> sec = end - start;
+
+    cout << fixed << setprecision(2);
+    cout << " - t: " << sec.count() << "s";
+    cout << " - error(" << batch * n_batch << " images): ";
+    cout << error_acc / (batch * n_batch) * 100 << "%" << endl;
+}
+
 }

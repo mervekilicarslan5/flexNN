@@ -13,7 +13,9 @@ namespace simple_nn
 		ACTIVATION,
 		BATCHNORM1D,
 		BATCHNORM2D,
-		FLATTEN
+		FLATTEN,
+		QCONV2D,
+		QLINEAR
 	};
 
     std::string toString(LayerType type) {
@@ -27,6 +29,8 @@ namespace simple_nn
     case LayerType::BATCHNORM1D: return "BATCHNORM1D";
     case LayerType::BATCHNORM2D: return "BATCHNORM2D";
     case LayerType::FLATTEN: return "FLATTEN";
+	case LayerType::QCONV2D: return "QCONV2D";
+	case LayerType::QLINEAR: return "QLINEAR";
     default: return "Unknown LayerType";
     }
 }

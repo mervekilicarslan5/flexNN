@@ -12,7 +12,7 @@
 #include <chrono>
 #include <random>
 #include <assert.h>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "im2col.h"
 #include "col2im.h"
 #include "../datatypes/fixed.hpp"
