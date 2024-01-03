@@ -12,6 +12,9 @@
 #include "optimizers.h"
 #include "data_loader.h"
 #include "file_manage.h"
+#include "quantization_utils.h"
+#include "quantizedConv2d.h"
+#include "quantizedFC.h"
 
 namespace simple_nn
 {
@@ -29,6 +32,7 @@ namespace simple_nn
 		void save(string save_dir, string fname);
 		void load(string save_dir, string fname);
 		void evaluate(const DataLoader<T>& data_loader);
+        void evaluate_quant(const DataLoader<T>& data_loader); 
         MatX<T> forward_return(const MatX<T>& X, bool is_training);
 	private:
 		virtual void forward(const MatX<T>& X, bool is_training);
@@ -803,7 +807,7 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
 		cout << error_acc / (batch * n_batch) * 100 << "%" << endl;
 	}
     template<typename T>
-void SimpleNN<T>::evaluate_quant(const DataLoader<T>& data_loader) {
+    void SimpleNN<T>::evaluate_quant(const DataLoader<T>& data_loader) {
     int batch = data_loader.input_shape()[0];
     int n_batch = data_loader.size();
     float error_acc = 0;
@@ -817,6 +821,10 @@ void SimpleNN<T>::evaluate_quant(const DataLoader<T>& data_loader) {
         X = data_loader.get_x(n); 
         Y = data_loader.get_y(n);
 
+        float input_scale = 0.0;
+        float input_zero_point = 0;
+        float output_scale = 0;
+        float output_zero_point = 0;
         // Quantize the input before feeding it into the network
         MatX<int8_t> qX;
         Quantization::quantize_batch(X, qX, input_scale, input_zero_point);  // Use the appropriate scale and zero point
