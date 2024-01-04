@@ -267,9 +267,10 @@ T s1;
 /*     this->s1 = T(s); */
 /* } */
 
-Wrapper(float s)
+Wrapper(UINT_TYPE s)
 {
-    this->s1 = FloatFixedConverter<float, INT_TYPE, UINT_TYPE, FRACTIONAL_VALUE>::float_to_ufixed(s);
+    this->s1 = s;
+    /* this->s1 = FloatFixedConverter<float, INT_TYPE, UINT_TYPE, FRACTIONAL_VALUE>::float_to_ufixed(s); */
     /* this->s1 = FloatFixedConverter<float, INT_TYPE, UINT_TYPE, ANOTHER_FRACTIONAL_VALUE>::ufixed_to_float(FloatFixedConverter<float, INT_TYPE, UINT_TYPE, ANOTHER_FRACTIONAL_VALUE>::float_to_ufixed(s)); */
     /* UINT_TYPE temp = FloatFixedConverter<float_type, INT_TYPE, UINT_TYPE, fractional>::float_to_ufixed(s); */
     /* this->s1 = FloatFixedConverter<float_type, INT_TYPE, UINT_TYPE, fractional>::ufixed_to_float(temp); */
@@ -303,6 +304,10 @@ Wrapper operator*(const Wrapper s) const{
     /*     std::cout << "overflow" <<std::endl; */
 
     /* } */
+    return Wrapper(this->s1 * s.s1, 0);
+}
+
+Wrapper prepare_dot(const Wrapper s) const{
     return Wrapper(this->s1 * s.s1, 0);
 }
 
@@ -485,8 +490,12 @@ static void argMax(const W* begin, const W* end, W* output) {
 }
 
 
-float_type reveal() const{
-    return FloatFixedConverter<float, INT_TYPE, UINT_TYPE, FRACTIONAL_VALUE>::ufixed_to_float(this->s1);
+UINT_TYPE reveal() const{
+    return this->s1;
+}
+
+float reveal_float() const{
+    return this->s1;
 }
 
 /* void truncate(){ */

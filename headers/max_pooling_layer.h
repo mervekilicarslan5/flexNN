@@ -3,7 +3,7 @@
 
 namespace simple_nn
 {
-	const float FLOAT_MIN = -1000000000.f;
+	const int FLOAT_MIN = -127;
 
     template<typename T>
 	class MaxPool2d : public Layer<T>

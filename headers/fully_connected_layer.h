@@ -17,7 +17,10 @@ namespace simple_nn
 	public:
 		MatX<T> W;
 		RowVecX<T> b;
-		Linear(int in_features, int out_features, string option = "kaiming_uniform");
+        bool quantize;
+        float scale;
+        float zero_point;
+		Linear(int in_features, int out_features, bool quantize = false, string option = "kaiming_uniform");
 		void set_layer(const vector<int>& input_shape) override;
 		void forward(const MatX<T>& prev_out, bool is_training) override;
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;
@@ -27,11 +30,12 @@ namespace simple_nn
 	};
 
     template<typename T>
-	Linear<T>::Linear(int in_features, int out_features, string option) :
+	Linear<T>::Linear(int in_features, int out_features, bool qunatize, string option) :
 		Layer<T>(LayerType::LINEAR),
 		batch(0),
 		in_feat(in_features),
 		out_feat(out_features),
+        quantize(quantize),
 		option(option) {}
 
     template<typename T>
@@ -70,15 +74,6 @@ namespace simple_nn
                 sum.mask_and_send_dot(); // send immediately to utilize network better
                 loutput[n * output_cols + i] = sum;
             }
-            /* for(int i = 0; i < W.rows(); ++i) { */
-            /* T sum = T(0); */
-            /* for(int j = 0; j < W.cols(); ++j) { */
-            /*     sum += (W(i, j) * prev_out(n, j));  // Use custom * and + operators */
-            /* } */
-            /* sum.mask_and_send_dot(); // send immediately to utilize network better */
-            /* this->output(n, i) = sum; */
-        /* } */
-            /* tmp_output2.row(n).noalias() = W * prev_out.row(n).transpose(); */
         }
 
             T::communicate();
@@ -90,6 +85,12 @@ namespace simple_nn
 
 		    for (int n = 0; n < batch; n++) 
 			    this->output.row(n).noalias() += b;
+        
+        if (this->quantize) {
+            for (int i = 0; i < this->output.size(); i++) {
+                this->output(i) = this->output(i) * scale + zero_point;
+            }
+        }
 		
 	}
 

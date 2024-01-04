@@ -158,10 +158,10 @@ class LeNet : public SimpleNN<T>
     public:
     LeNet(int num_classes)
     {
-        this->add(new Conv2d<T>(1,6,5,0,0));
+        this->add(new Conv2d<T>(1,6,5,1,2));
         this->add(new ReLU<T>());
         this->add(new AvgPool2d<T>(2,2));
-        this->add(new Conv2d<T>(6,16,5,0,0));
+        this->add(new Conv2d<T>(6,16,5,1,0));
         this->add(new ReLU<T>());
         this->add(new AvgPool2d<T>(2,2));
         this->add(new Flatten<T>());

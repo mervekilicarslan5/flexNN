@@ -304,7 +304,7 @@ ResNet<T> ResNet18(int num_classes, string option, int image_channels = 3) {
 }
 
 template <typename T>
-ResNet<T> ResNet50(int num_classes, string option, int image_channels = 3) {
+ResNet<T> ResNet50(int num_classes, string option = "kaiming_uniform", int image_channels = 3) {
     int residual_blocks[4] = {3, 4, 6, 3};
     return ResNet<T>(residual_blocks, image_channels, num_classes, option);
 }

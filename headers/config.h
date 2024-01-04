@@ -34,7 +34,7 @@ namespace simple_nn
 	};
 
 	Config::Config() :
-		mode("train"),
+		mode("test"),
 		model("lenet5"),
 		data_dir("./dataset"),
 		save_dir("./model_zoo"),

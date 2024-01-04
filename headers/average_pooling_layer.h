@@ -19,9 +19,10 @@ namespace simple_nn
 		int kh;
 		int kw;
 		int stride;
+        int pad;
 		// MatX<T> im_col;
 	public:
-		AvgPool2d(int kernel_size, int stride);
+		AvgPool2d(int kernel_size, int stride, int pad = 0);
 		void set_layer(const vector<int>& input_shape) override;
 		void forward(const MatX<T>& prev_out, bool is_training) override;
 		void backward(const MatX<T>& prev_out, MatX<T>& prev_delta) override;
@@ -30,7 +31,7 @@ namespace simple_nn
 	};
 
     template<typename T>
-	AvgPool2d<T>::AvgPool2d(int kernel_size, int stride) :
+	AvgPool2d<T>::AvgPool2d(int kernel_size, int stride, int pad) :
 		Layer<T>(LayerType::AVGPOOL2D),
 		batch(0),
 		ch(0),
@@ -42,7 +43,8 @@ namespace simple_nn
 		ohw(0),
 		kh(kernel_size),
 		kw(kernel_size),
-		stride(stride) {}
+		stride(stride),
+        pad(pad){}
 
     template<typename T>
 	void AvgPool2d<T>::set_layer(const vector<int>& input_shape)
@@ -67,7 +69,7 @@ namespace simple_nn
         this->output.setZero();
 		T* out = this->output.data();
 		const T* pout = prev_out.data();
-		float denominator = kh * kw;
+		int denominator = kh * kw;
         /* int denominator = std::log2(kh * kw); */
 		for (int n = 0; n < batch; n++) {
 			for (int c = 0; c < ch; c++) {
@@ -76,8 +78,8 @@ namespace simple_nn
 						int out_idx = j + ow * (i + oh * (c + ch * n));
 						for (int y = 0; y < kh; y++) {
 							for (int x = 0; x < kw; x++) {
-								int ii = i * stride + y;
-								int jj = j * stride + x;
+								int ii = i * stride + y - pad;
+								int jj = j * stride + x - pad;
 								int in_idx = jj + iw * (ii + ih * (c + ch * n));
 								if (ii >= 0 && ii < ih && jj >= 0 && jj < iw) {
 									out[out_idx] += pout[in_idx];
@@ -85,7 +87,7 @@ namespace simple_nn
 							}
 						}
                         /* out[out_idx] = out[out_idx] >> denominator; */
-						out[out_idx] *= T(1/denominator);
+						out[out_idx] /= denominator;
                         out[out_idx].complete_mult();
                         /* out[out_idx] /= denominator; */
 					}
@@ -140,8 +142,8 @@ namespace simple_nn
 						int cur_idx = j + ow * (i + oh * (c + ch * n));
 						for (int y = 0; y < kh; y++) {
 							for (int x = 0; x < kw; x++) {
-								int ii = y + stride * i;
-								int jj = x + stride * j;
+								int ii = y + stride * i - pad;
+								int jj = x + stride * j - pad;
 								int prev_idx = jj + iw * (ii + ih * (c + ch * n));
 								if (ii >= 0 && ii < ih && jj >= 0 && jj < iw) {
 									pd[prev_idx] = d[cur_idx] / denominator;

@@ -28,7 +28,10 @@ namespace simple_nn
 	public:
 		MatX<T> kernel;
 		VecX<T> bias;
-		Conv2d(int in_channels, int out_channels, int kernel_size, int stride, int padding, bool use_bias = true,
+        bool quantize; 
+        float scale;
+        float zero_point;
+		Conv2d(int in_channels, int out_channels, int kernel_size, int stride, int padding, bool quantize = false, bool use_bias = true,
 			string option = "kaiming_uniform");
 		void set_layer(const vector<int>& input_shape) override;
 		void forward(const MatX<T>& prev_out, bool is_training) override;
@@ -45,6 +48,7 @@ namespace simple_nn
 		int kernel_size,
         int stride, // add stride
 		int padding,
+        bool quantize,
         bool use_bias,
 		string option
 	) :
@@ -63,6 +67,7 @@ namespace simple_nn
         stride(stride), // add stride
 		pad(padding),
         use_bias(use_bias),
+        quantize(quantize),
 		option(option) {}
 
     template<typename T>
@@ -107,146 +112,8 @@ namespace simple_nn
             /* std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now(); */
 			const T* im = prev_out.data() + (ic * ihw) * n;
 			im2col(im, ic, ih, iw, kh, stride, pad, im_col.data());
-            /* std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now(); */
-            /* std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1); */
-            /* std::cout << "im2col time: " << time_span.count() << " seconds." << std::endl; */
-			/* tmp_output.block(oc * n, 0, oc, ohw).noalias() = tmp_kernel * tmp_im_col; */
-            /* t1 = std::chrono::high_resolution_clock::now(); */
-            /* for(int i = 0; i < oc; ++i) { */
-        /* for(int k = 0; k < kernel.cols(); ++k) { */
-            /* T temp = kernel(i, k); */
-            /*     for(int j = 0; j < ohw; ++j) { */
-            /*         this->output(oc * n + i, j) += temp * im_col(k, j);  // Use custom * and + operators */
-            /*         } */
-            /*     } */
-            /* } */
-              // For each chunk of columns
-    /* auto A = im_col.data(); */
-    /* auto B = kernel.data(); */
-    /* auto C = this->output.data(); */
-    /* auto A = kernel; */
-    /* auto B = im_col; */
-    /* auto C = this->output; */
-    /* const int Mtile = 16; // tile size in M dimension */
-    /* const int Ntile = 16; // tile size in N dimension */
-    /* const int M = oc; */
-    /* const int N = ohw; */ 
-    /* const int K = kernel.cols(); */ 
 
-    /* for (int m = 0; m < M; m += Mtile)                // iterate over M dimension */
-    /* for (int n = 0; n < N; n += Ntile)            // iterate over N dimension */
-    /*     for (int k = 0; k < K; ++k) */
-    /*         for (int i = 0; i < Mtile; ++i)       // compute one tile */ 
-    /*             for (int j = 0; j < Ntile; ++j) { */
-    /*                 int row = m + i; */
-    /*                 int col = n + j; */
-    /*                 C(row,col) += A(row,k) * B(k,col); */
-    /*                 /1* C[row][col] += A[row][k] * B[k][col]; *1/ */
-    /*             } */
-  /* for (std::size_t col_chunk = 0; col_chunk < ohw; col_chunk += 16) */
-  /*   // For each row in that chunk of columns... */
-  /*   for (std::size_t row = 0; row < oc; row++) */
-  /*     // For each block of elements in this row of this column chunk */
-  /*     // Solve for 16 elements at a time */
-  /*     for (std::size_t tile = 0; tile < kernel.cols(); tile += 16) */
-  /*       // For each row in the tile */
-  /*       for (std::size_t tile_row = 0; tile_row < 16; tile_row++) */
-  /*         // Solve for each element in this tile row */
-  /*         for (std::size_t idx = 0; idx < 16; idx++) */
-  /*           /1* C[row * N + col_chunk + idx] += *1/ */
-  /*           /1*     A[row * N + tile + tile_row] * *1/ */
-  /*           /1*     B[tile * N + tile_row * N + col_chunk + idx]; *1/ */
-  /*           C[row * ohw + col_chunk + idx] += */
-  /*               A[row * ohw + tile + tile_row] * */
-  /*               B[tile * ohw + tile_row * ohw + col_chunk + idx]; */
-			/* this->output.block(oc * n, 0, oc, ohw).noalias() = kernel * im_col; */
-    /* auto A = kernel; */
-    /* auto B = im_col; */
-    /* auto C = this->output; */
-    /* const int Mtile = std::min(oc, 16); // tile size in M dimension */
-    /* const int Ntile = std::min(ohw, 16); // tile size in N dimension */
-
-    /* const int TILE_SIZE = 64; */
-    /* const int M = oc; */
-    /* const int N = ohw; */ 
-    /* const int K = kernel.cols(); */ 
-    /* auto A = kernel.data(); */
-    /* auto B = im_col.data(); */
-    /* auto C = this->output.data() + (oc * ohw) * n; */
-    /* /1* std::cout << "N: " << N << " M: " << M << " K: " << K << " Mtile: " << Mtile << " Ntile: " << Ntile << std::endl; *1/ */
-
-    /* for (int m = 0; m < M; m += TILE_SIZE)                // iterate over M dimension */
-    /* { */
-    /*     int m_max = std::min(m + TILE_SIZE, M); */
-    /* for (int q = 0; q < N; q += TILE_SIZE)            // iterate over N dimension */
-    /*                                                 { */
-    /*     int q_max = std::min(q + TILE_SIZE, N); */
-    /*     for (int k = 0; k < K; ++k){ */
-    /*         for (int i = 0; i < m_max; ++i) {      // compute one tile */ 
-    /*                 int row = m + i; */
-    /*             for (int j = 0; j < q_max; ++j) { */
-    /*                 int col = q + j; */
-    /*                 /1* C(n*oc + row,col) += A(row,k) * B(k,col); *1/ */
-    /*                 /1* this->output(n*oc + row,col += kernel(row,k) * im_col(k,col)); *1/ */
-    /*                C[row * N + col] += A[row * K + k] * B[k * N + col]; */
-    /*                 /1* C[row][col] += A[row][k] * B[k][col]; *1/ */
-    /*             } */
-    /*           } */
-            
-    /*         } */
-    /*         for (int i = 0; i < m_max; ++i) {      // compute one tile */ 
-    /*                 int row = m + i; */
-    /*             for (int j = 0; j < q_max; ++j) { */
-    /*                 int col = q + j; */
-    /*                 /1* C(n*oc + row,col) += A(row,k) * B(k,col); *1/ */
-    /*                 /1* this->output(n*oc + row,col += kernel(row,k) * im_col(k,col)); *1/ */
-    /*     C[row * N + col].mask_and_send_dot(); */
-    /*                 /1* C[row][col] += A[row][k] * B[k][col]; *1/ */
-    /*             } */
-    /*           } */
-        
-    /* } */
-    /* } */
-// TILING ---
-            /* auto A = kernel.data(); */
-    /* auto B = im_col.data(); */
-    /* auto C = this->output.data() + (oc * ohw) * n; */
-    /* const int TILE_SIZE = 64; */
-    /* const int m = oc; */
-    /* const int f = kernel.cols(); */
-    /* const int p = ohw; */
-  /* for (int i = 0; i < m; i += TILE_SIZE) { */
-        /* int i_max = std::min(i + TILE_SIZE, m); */
-        /* for (int j = 0; j < p; j += TILE_SIZE) { */
-            /* int j_max = std::min(j + TILE_SIZE, p); */
-            /* for (int k = 0; k < f; k += TILE_SIZE) { */
-            /*     int k_max = std::min(k + TILE_SIZE, f); */
-            /*             for (int kk = k; kk < k_max; ++kk) { */
-            /*         const int row2 = kk*p; */
-            /*     for (int ii = i; ii < i_max; ++ii) { */
-            /*         const int row = ii*p; */
-            /*         /1* const int row2 = ii*f+kk; *1/ */
-            /*         auto temp = A[ii*f+kk]; */
-            /*         for (int jj = j; jj < j_max; ++jj) { */
-            /*            C[row + jj] += temp * B[row2 + jj]; */ 
-            /*             } */
-            /*         } */
-            /*     } */
-            /* } */
-            /* for (int ii = i; ii < i_max; ++ii) { */
-            /*     const int row = ii*p; */
-            /*     for (int jj = j; jj < j_max; ++jj) { */
-            /*         C[row + jj].mask_and_send_dot(); */
-            /*     } */
-            /* } */
-        /* } */
-    /* } */
-
-
-
-
-            auto A = kernel.data();
-    /* auto B = im_col.transpose().data(); */
+    auto A = kernel.data();
     MatX<T> BM = im_col.transpose();
     auto B = BM.data();
     auto C = this->output.data() + (oc * ohw) * n;
@@ -255,56 +122,36 @@ namespace simple_nn
     const int f = kernel.cols();
     const int p = ohw;
     const int TILE_SIZE = 64;
-
-
   for (int i = 0; i < m; i += TILE_SIZE) {
+      /* _mm_prefetch(A + i * f, _MM_HINT_T0); */
         int i_max = std::min(i + TILE_SIZE, m);
         for (int j = 0; j < p; j += TILE_SIZE) {
+            /* _mm_prefetch(B + j * f, _MM_HINT_T0); */
             int j_max = std::min(j + TILE_SIZE, p);
             for (int k = 0; k < f; k += TILE_SIZE) {
                 int k_max = std::min(k + TILE_SIZE, f);
-                    for (int jj = j; jj < j_max; ++jj) {
                 for (int ii = i; ii < i_max; ++ii) {
                     /* const int row2 = ii*f+kk; */
-                        T temp_sum = T(0);
+                    for (int jj = j; jj < j_max; ++jj) {
+                    auto temp = T(0,0);
                         for (int kk = k; kk < k_max; ++kk) {
-                       temp_sum += A[ii*f+kk] * B[jj*f + kk]; 
+                            /* _mm_prefetch(C + ii * p + jj, _MM_HINT_T0); */
+                       temp += A[ii*f+kk].prepare_dot(B[jj*f + kk]);
                         }
-                        C[ii*p + jj] += temp_sum;
+                        C[ii*p + jj] += temp;
                     }
                 }
             }
             for (int ii = i; ii < i_max; ++ii) {
+                const int row = ii*p;
                 for (int jj = j; jj < j_max; ++jj) {
-                    C[ii*p + jj].mask_and_send_dot();
+                    C[row + jj].mask_and_send_dot();
                 }
             }
         }
     }
+    }
 
-
-
-
-        
-
-            /* for(int k = 0; k < kernel.cols(); ++k) { */
-        /*     for(int i = 0; i < oc; ++i) { */
-        /*         for(int j = 0; j < ohw; ++j) { */
-        /*             this->output(oc *n + i, j) += (kernel(i, k) * im_col(k, j));  // Use custom * and + operators */
-        /*             } */
-        /*         } */
-        /* } */
-
-        /* t2 = std::chrono::high_resolution_clock::now(); */
-        /* time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1); */
-        /* std::cout << "matmul time: " << time_span.count() << " seconds." << std::endl; */
-            
-
-        }
-        /* std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now(); */
-            /* for (int i = 0; i < this->output.size(); i++) { */
-            /*     this->output(i).mask_and_send_dot(); */
-            /* } */
             T::communicate();
             for (int i = 0; i < this->output.size(); i++) {
                 this->output(i).complete_mult();
@@ -313,10 +160,12 @@ namespace simple_nn
 		if (use_bias)
             for (int n = 0; n < batch; n++) 
 			    this->output.block(oc * n, 0, oc, ohw).colwise() += bias;
+
+        if (this->quantize)
+            for (int i = 0; i < this->output.size(); i++) 
+                this->output(i) = this->output(i) * scale + zero_point;
+           
 		
-        /* auto t2 = std::chrono::high_resolution_clock::now(); */
-        /* auto time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1); */
-        /* std::cout << "mask and bias time: " << time_span.count() << " seconds." << std::endl; */
 	}
 
     template<typename T>
