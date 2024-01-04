@@ -53,7 +53,7 @@ namespace simple_nn
 		w(width),
 		chhw(channels * height * width)
 	{
-		n_batch = (int)this->X.rows() / ch / batch;
+		n_batch = (int)this->X.rows() / batch;
 		generate_batch_indices(shuffle);
 	}
 

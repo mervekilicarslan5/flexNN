@@ -14,6 +14,7 @@ namespace simple_nn
 		std::string data_dir;
 		std::string save_dir;
 		std::string pretrained;
+        std::string pretrained_quant;
 		std::string pool;
 		std::string activ;
 		std::string init;
@@ -39,6 +40,7 @@ namespace simple_nn
 		data_dir("./dataset"),
 		save_dir("./model_zoo"),
 		pretrained(""),
+        pretrained_quant(""),
 		pool("avg"),
 		activ("relu"),
 		init("kaiming_uniform"),
@@ -80,6 +82,10 @@ namespace simple_nn
 				else if ((*it) == "pretrained") {
 					it++;
 					pretrained = *it;
+				}
+				else if ((*it) == "pretrained_quant") {
+					it++;
+					pretrained_quant = *it;
 				}
 				else if ((*it) == "pool") {
 					it++;
@@ -153,6 +159,7 @@ namespace simple_nn
 		std::cout << "  --data_dir      = " << data_dir << std::endl;
 		std::cout << "  --save_dir      = " << save_dir << std::endl;
 		std::cout << "  --pretrained    = " << pretrained << std::endl;
+        std::cout << "  --pretrained_quant    = " << pretrained_quant << std::endl;
 		std::cout << "  --pool          = " << pool << std::endl;
 		std::cout << "  --activ         = " << activ << std::endl;
 		std::cout << "  --init          = " << init << std::endl;
@@ -174,6 +181,7 @@ namespace simple_nn
 		std::cout << "  --data_dir      = Dataset directory (default: ./dataset)" << std::endl;
 		std::cout << "  --save_dir      = Saving directory (default: ./model_zoo)" << std::endl;
 		std::cout << "  --pretrained    = Pretrained file name (default: None)" << std::endl;
+        std::cout << "  --pretrained_quant    = Pretrained file name (default: None)" << std::endl;
 		std::cout << "  --pool          = Pooling method (options: max, avg; default: max)" << std::endl;
 		std::cout << "  --activ         = Activation function for hidden layer (options: tanh, relu; default: relu)" << std::endl;
 		std::cout << "  --init          = Weight initialization (default: lecun_uniform)" << std::endl;

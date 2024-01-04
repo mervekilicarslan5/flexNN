@@ -34,8 +34,8 @@ int main(int argc, char** argv)
 	DataLoader<SHARETYPE> train_loader, test_loader;
     
 
-    /* auto test_X = read_custom_images<float>("./dataset/cifar10-test-images.bin", n_test * ch, ch, h, w); */
-    /* auto test_Y = read_custom_labels("./dataset/cifar10-test-labels.bin", n_test * ch); */
+    /* auto test_X = read_custom_images<UINTTYPE>("./dataset/cifar10-test-images.bin", n_test, ch, h, w); */
+    /* auto test_Y = read_custom_labels("./dataset/cifar10-test-labels.bin", n_test); */
     auto test_X = read_dummy_images<UINTTYPE>(n_test, ch, h, w);
     auto test_Y = read_dummy_labels(n_test);
     
@@ -53,7 +53,8 @@ int main(int argc, char** argv)
     model.compile({ cfg.batch, ch, h, w });
     cout << "Model construction completed." << endl;
     std::cout << "Loading Model Parameters..." << std::endl;
-    model.load(cfg.save_dir, cfg.pretrained);
+    model.load(cfg.save_dir, cfg.pretrained); //load regular Parameters 
+    model.load_quant(cfg.save_dir, cfg.pretrained_quant); // load quantized Parameters
     /* model.load(cfg.save_dir, "dummy"); */
     model.evaluate(test_loader);
     /* } */
