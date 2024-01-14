@@ -395,12 +395,14 @@ namespace simple_nn
 				const Linear<T>* lc = dynamic_cast<const Linear<T>*>(l);
 				total_params += (int)lc->W.size();
 				total_params += (int)lc->b.size();
+                total_params+= 1; // zero point
                 std::cout << ": " << (int)lc->W.size() << " " << (int)lc->b.size() << "\n";
 			}
 			else if (l->type == LayerType::CONV2D) {
 				const Conv2d<T>* lc = dynamic_cast<const Conv2d<T>*>(l);
 				total_params += (int)lc->kernel.size();
 				total_params += (int)lc->bias.size();
+                total_params+= 1; // zero point
                 std::cout << " : " << (int)lc->kernel.size() << " " << (int)lc->bias.size() << "\n";
 			}
 			else if (l->type == LayerType::BATCHNORM1D) {
@@ -437,11 +439,11 @@ void SimpleNN<T>::write_or_read_quant_params(S& fs, string mode)
                 if (lc->quantize) 
                 {
                     float scale;
-                    float zero_point;
+                    /* float zero_point; */
                     fs.read((char*) &scale, sizeof(float));
-                    fs.read((char*) &zero_point, sizeof(float));
+                    /* fs.read((char*) &zero_point, sizeof(float)); */
                     lc->scale = scale;
-                    lc->zero_point = zero_point;
+                    /* lc->zero_point = zero_point; */
                 }
                 }
         else if (l->type == LayerType::CONV2D) {
@@ -449,11 +451,11 @@ void SimpleNN<T>::write_or_read_quant_params(S& fs, string mode)
                 if (lc->quantize) 
                 {
                     float scale;
-                    float zero_point;
+                    /* float zero_point; */
                     fs.read((char*) &scale, sizeof(float));
-                    fs.read((char*) &zero_point, sizeof(float));
+                    /* fs.read((char*) &zero_point, sizeof(float)); */
                     lc->scale = scale;
-                    lc->zero_point = zero_point;
+                    /* lc->zero_point = zero_point; */
                 }
             }
         
@@ -487,10 +489,14 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
                 }
                 fs.write((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.write((char*)tempMatrix2.data(), sizeof(T) * s2);
+
+                /* fs.write((char*) &(lc->zero_point.reveal()), sizeof(T)); */
             }
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.read((char*)tempMatrix2.data(), sizeof(T) * s2);
+                uint32_t zero_point;
+                fs.read((char*) &zero_point, sizeof(uint32_t));
                 for (int i = 0; i < s1; i++) 
                 {
                     lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(tempMatrix1[i]);
@@ -499,6 +505,7 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
                 {
                     lc->b[i] = T(tempMatrix2[i]);
                 }
+                lc->zero_point = T(zero_point);
             }
         }
         else if (l->type == LayerType::CONV2D) {
@@ -519,10 +526,13 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
                 }
                 fs.write((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.write((char*)tempMatrix2.data(), sizeof(T) * s2);
+                /* fs.write((char*) &(lc->zero_point.reveal()), sizeof(T)); */
             }
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.read((char*)tempMatrix2.data(), sizeof(T) * s2);
+                uint32_t zero_point;
+                fs.read((char*) &zero_point, sizeof(uint32_t));
                 for (int i = 0; i < s1; i++)
                 {
                     lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(tempMatrix1[i]);
@@ -531,6 +541,7 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
                 {
                     lc->bias[i] = T(tempMatrix2[i]);
                 }
+                lc->zero_point = T(zero_point);
             }
         }
         else if (l->type == LayerType::BATCHNORM1D) {

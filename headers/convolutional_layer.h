@@ -30,7 +30,7 @@ namespace simple_nn
 		VecX<T> bias;
         bool quantize; 
         float scale;
-        float zero_point;
+        T zero_point;
 		Conv2d(int in_channels, int out_channels, int kernel_size, int stride, int padding, bool quantize = false, bool use_bias = true,
 			string option = "kaiming_uniform");
 		void set_layer(const vector<int>& input_shape) override;

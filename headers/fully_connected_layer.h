@@ -19,7 +19,7 @@ namespace simple_nn
 		RowVecX<T> b;
         bool quantize;
         float scale;
-        float zero_point;
+        T zero_point;
 		Linear(int in_features, int out_features, bool quantize = false, string option = "kaiming_uniform");
 		void set_layer(const vector<int>& input_shape) override;
 		void forward(const MatX<T>& prev_out, bool is_training) override;
