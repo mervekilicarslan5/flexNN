@@ -108,7 +108,7 @@ MatX<T> read_custom_images(const string& filename, int n_imgs, int channel, int 
     }
 
     int image_size = channel * height * width;
-    MatXf images(n_imgs, image_size);
+    MatX<T> images(n_imgs, image_size);
 
     for (int img = 0; img < n_imgs; ++img) {
         for (int i = 0; i < image_size; ++i) {

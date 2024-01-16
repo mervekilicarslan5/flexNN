@@ -30,7 +30,7 @@ namespace simple_nn
 	};
 
     template<typename T>
-	Linear<T>::Linear(int in_features, int out_features, bool qunatize, string option) :
+	Linear<T>::Linear(int in_features, int out_features, bool quantize, string option) :
 		Layer<T>(LayerType::LINEAR),
 		batch(0),
 		in_feat(in_features),

@@ -204,7 +204,7 @@ namespace simple_nn
 		/* T error(0); */
         int error(0);
 		for (int i = 0; i < batch; i++) {
-            std::cout << "classified[i] = " << classified[i] << " labels[i] = " << labels[i] << "\n";
+            //std::cout << "classified[i] = " << classified[i] << " labels[i] = " << labels[i] << "\n";
 			if (classified[i] != labels[i]) 
             {
                 error+=1;
@@ -272,44 +272,38 @@ namespace simple_nn
     template<typename T>
 	void SimpleNN<T>::load_quant(string save_dir, string fname)
 	{
-        if("dummy" == fname)
+          if("dummy" == fname)
         {
             //create fake filestream with total_params*4 bytes
             int k = count_quant_params();
-              std::stringstream ss;
-    // Generate k random floating point numbers and write them to the stringstream
-    for (int i = 0; i < k; ++i) {
-        /* ss << static_cast<float>(rand()) / RAND_MAX << " "; */
-        ss << 1.0f << " ";
-    }
+            std::stringstream ss;
+            // Generate k random floating point numbers and write them to the stringstream
+            for (int i = 0; i < k; ++i) {
+                /* ss << static_cast<float>(rand()) / RAND_MAX << " "; */
+                ss << 1.0f << " ";
+            }
 
-    // Create a file stream and open it in read/write mode
-    ss.seekg(0, std::ios::beg); 
-    write_or_read_quant_params(ss, "read");
-	cout << "Pretrained dummy quant weights are loaded." << endl;
-    return;
+            // Create a file stream and open it in read/write mode
+            ss.seekg(0, std::ios::beg); 
+            write_or_read_quant_params(ss, "read");
+            cout << "Pretrained dummy quant weights are loaded." << endl;
+            return;
 
         }
 		string path = save_dir + "/" + fname;
 		fstream fin(path, ios::in | ios::binary);
-
+        cout << " quant weights are loading." << endl;
+        
 		if (!fin) {
 			cout << path << " does not exist." << endl;
 			exit(1);
 		}
 
-		int total_params;
-		fin.read((char*)&total_params, sizeof(int32_t));
-
-		if (total_params != count_quant_params()) {
-			fin.close();
-			exit(1);
-		}
-
 		write_or_read_quant_params(fin, "read");
+        
 		fin.close();
 
-		cout << "Pretrained quant weights are loaded." << endl;
+		cout << "Pretrained quant params are loaded." << endl;
         
 
 		return;
@@ -323,22 +317,22 @@ namespace simple_nn
             //create fake filestream with total_params*4 bytes
             int k = count_params();
               std::stringstream ss;
-    // Generate k random floating point numbers and write them to the stringstream
-    for (int i = 0; i < k; ++i) {
-        /* ss << static_cast<float>(rand()) / RAND_MAX << " "; */
-        ss << 1.0f << " ";
-    }
+            // Generate k random floating point numbers and write them to the stringstream
+            for (int i = 0; i < k; ++i) {
+                /* ss << static_cast<float>(rand()) / RAND_MAX << " "; */
+                ss << 1.0f << " ";
+            }
 
-    // Create a file stream and open it in read/write mode
-    ss.seekg(0, std::ios::beg); 
-    write_or_read_params(ss, "read");
-	cout << "Pretrained dummy weights are loaded." << endl;
-    return;
+            // Create a file stream and open it in read/write mode
+            //ss.seekg(0, std::ios::beg); 
+            //write_or_read_params(ss, "read");
+            //cout << "Pretrained dummy weights are loaded." << endl;
+            //return;
 
         }
 		string path = save_dir + "/" + fname;
 		fstream fin(path, ios::in | ios::binary);
-
+        cout<<path<<"path weighs"<<endl;
 		if (!fin) {
 			cout << path << " does not exist." << endl;
 			exit(1);
@@ -349,11 +343,11 @@ namespace simple_nn
 
 		if (total_params != count_params()) {
 			/* cout << "The number of parameters does not match." << "\n"; */
-            /* cout << "Loaded Parameters = " << total_params << " Compiled Parameters = " << count_params() << "\n"; */
-			fin.close();
+            cout << "Loaded Parameters = " << total_params << " Compiled Parameters = " << count_params() << "\n";
+			//fin.close();
                         /* cout << " " << total_params << " " << count_params() << "\n"; */
 
-			exit(1);
+			//exit(1);
 		}
 
 		write_or_read_params(fin, "read");
@@ -427,39 +421,42 @@ namespace simple_nn
 		return total_params;
 	}
 
-    template<typename T>
+
+template<typename T>
 template<typename S>
 void SimpleNN<T>::write_or_read_quant_params(S& fs, string mode)
 {
     for (Layer<T>* l : net) {
-        if (l->type == LayerType::LINEAR) {
-            Linear<T>* lc = dynamic_cast<Linear<T>*>(l);
-                if (lc->quantize) 
-                {
-                    float scale;
-                    float zero_point;
-                    fs.read((char*) &scale, sizeof(float));
-                    fs.read((char*) &zero_point, sizeof(float));
-                    lc->scale = scale;
-                    lc->zero_point = zero_point;
-                }
-                }
-        else if (l->type == LayerType::CONV2D) {
+
+        if (l->type == LayerType::CONV2D) {
             Conv2d<T>* lc = dynamic_cast<Conv2d<T>*>(l);
                 if (lc->quantize) 
                 {
                     float scale;
-                    float zero_point;
+                    //float zero_point;
                     fs.read((char*) &scale, sizeof(float));
-                    fs.read((char*) &zero_point, sizeof(float));
+                    //fs.read((char*) &zero_point, sizeof(float));
                     lc->scale = scale;
-                    lc->zero_point = zero_point;
+                    //lc->zero_point = zero_point;
+
                 }
             }
+            else if (l->type == LayerType::LINEAR) {
+            Linear<T>* lc = dynamic_cast<Linear<T>*>(l);
+                
+                if (lc->quantize) 
+                {
+                    float scale;
+                    fs.read((char*) &scale, sizeof(float));
+                    lc->scale = scale;
+
+                }
+                }
         
 
 }
 }
+
 
 
 template<typename T>
@@ -467,8 +464,8 @@ template<typename S>
 void SimpleNN<T>::write_or_read_params(S& fs, string mode)
 {
     for (Layer<T>* l : net) {
-        vector<float> tempMatrix1, tempMatrix2, tempMatrix3, tempMatrix4; // Temporary vectors for parameter storage
-
+        vector<int32_t> tempMatrix1, tempMatrix2, tempMatrix3, tempMatrix4; // Temporary vectors for parameter storage
+        int32_t zero_point;
         if (l->type == LayerType::LINEAR) {
             Linear<T>* lc = dynamic_cast<Linear<T>*>(l);
             int s1 = lc->W.rows() * lc->W.cols();
@@ -491,14 +488,21 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.read((char*)tempMatrix2.data(), sizeof(T) * s2);
+                
                 for (int i = 0; i < s1; i++) 
                 {
                     lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(tempMatrix1[i]);
+                    
                 }
                 for (int i = 0; i < s2; i++)
                 {
                     lc->b[i] = T(tempMatrix2[i]);
+                    
                 }
+                fs.read((char*)&zero_point, sizeof(int32_t));
+                lc->zero_point = zero_point;
+                
+                
             }
         }
         else if (l->type == LayerType::CONV2D) {
@@ -507,7 +511,7 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
             int s2 = lc->bias.size();
             tempMatrix1.resize(s1);
             tempMatrix2.resize(s2);
-
+       
             if (mode == "write") {
                 for (int i = 0; i < s1; i++) 
                 {
@@ -523,14 +527,21 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.read((char*)tempMatrix2.data(), sizeof(T) * s2);
+                fs.read((char*)&zero_point, sizeof(int32_t));
+
                 for (int i = 0; i < s1; i++)
                 {
                     lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(tempMatrix1[i]);
+                    //cout<<tempMatrix1[i]<<endl;
                 } 
                 for (int i = 0; i < s2; i++)
                 {
                     lc->bias[i] = T(tempMatrix2[i]);
                 }
+                
+                
+                lc->zero_point = zero_point;
+                
             }
         }
         else if (l->type == LayerType::BATCHNORM1D) {

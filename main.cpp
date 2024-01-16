@@ -28,17 +28,17 @@ int main(int argc, char** argv)
 	cfg.parse(argc, argv);
 	cfg.print_config();
 
-	int n_train = 60000, n_test = 100, ch = 1, h = 28, w = 28, num_classes = 10;
+	int n_train = 60000, n_test = 10000, ch = 1, h = 28, w = 28, num_classes = 10;
 
 
 	DataLoader<SHARETYPE> train_loader, test_loader;
     
 
     //TODO: load your quantized dataset here (int32_t)
-    /* auto test_X = read_custom_images<UINTTYPE>("./dataset/cifar10-test-images.bin", n_test, ch, h, w); */
-    /* auto test_Y = read_custom_labels("./dataset/cifar10-test-labels.bin", n_test); */
-    auto test_X = read_dummy_images<UINTTYPE>(n_test, ch, h, w);
-    auto test_Y = read_dummy_labels(n_test);
+    auto test_X = read_custom_images<UINTTYPE>("./dataset_mnist_quant/MNIST_test_images.bin", n_test, ch, h, w); 
+    auto test_Y = read_custom_labels("./dataset_mnist_quant/MNIST_test_labels.bin", n_test); 
+    //auto test_X = read_dummy_images<UINTTYPE>(n_test, ch, h, w);
+    //auto test_Y = read_dummy_labels(n_test);
     
     MatX<SHARETYPE> test_XX = test_X.unaryExpr([](float val) { 
     return SHARETYPE(val);
@@ -54,10 +54,13 @@ int main(int argc, char** argv)
     model.compile({ cfg.batch, ch, h, w });
     cout << "Model construction completed." << endl;
     std::cout << "Loading Model Parameters..." << std::endl;
+
     //TODO: load your quantized model weights and biases here (int32_t)
     model.load(cfg.save_dir, cfg.pretrained); //load regular Parameters 
+
     //TODO: load your quantized zero point and scale here (float)
     model.load_quant(cfg.save_dir, cfg.pretrained_quant); // load quantized Parameters
+
     /* model.load(cfg.save_dir, "dummy"); */
     model.evaluate(test_loader);
     /* } */
