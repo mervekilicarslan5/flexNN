@@ -319,6 +319,11 @@ Wrapper operator/(const int s) const{
     return Wrapper(this->s1 / s, 0);
 }
 
+Wrapper mult_float(float s) const{
+    float result = float(this->s1) * s;
+    return Wrapper(std::round(result), 0);
+}
+
 void mask_and_send_dot() 
 {
     /* this->s1 = truncate(this->s1); */

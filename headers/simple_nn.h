@@ -495,8 +495,8 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.read((char*)tempMatrix2.data(), sizeof(T) * s2);
-                uint32_t zero_point;
-                fs.read((char*) &zero_point, sizeof(uint32_t));
+                int32_t zero_point;
+                fs.read((char*) &zero_point, sizeof(int32_t));
                 for (int i = 0; i < s1; i++) 
                 {
                     lc->W(i / lc->W.cols(), i % lc->W.cols()) = T(tempMatrix1[i]);
