@@ -91,7 +91,14 @@ namespace simple_nn
                 this->output(i) = this->output(i) * scale + zero_point;
             }
         }
-		
+		/*
+		std::cout << "Linear 10 values of output: ";
+		for (int i = 0; i < 10 && i < this->output.size(); ++i) {
+
+			std::cout << this->output(i).reveal()<< " ";
+
+		}
+		std::cout << std::endl; */
 	}
 
     template<typename T>

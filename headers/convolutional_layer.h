@@ -105,13 +105,17 @@ namespace simple_nn
     template<typename T>
 	void Conv2d<T>::forward(const MatX<T>& prev_out, bool is_training)
 	{
+
+		
         for (int i = 0; i < this->output.size(); i++) {
             this->output(i) = T(0,0);
+			
         }
 		for (int n = 0; n < batch; n++) {
             /* std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now(); */
 			const T* im = prev_out.data() + (ic * ihw) * n;
 			im2col(im, ic, ih, iw, kh, stride, pad, im_col.data());
+		
 
     auto A = kernel.data();
     MatX<T> BM = im_col.transpose();
@@ -122,6 +126,21 @@ namespace simple_nn
     const int f = kernel.cols();
     const int p = ohw;
     const int TILE_SIZE = 64;
+
+
+	/*int columns_to_print = 5;
+
+	std::cout << "im2col transformed data (first " << columns_to_print << " columns):" << std::endl;
+	for (int row = 0; row < im_col.rows(); ++row) {  // Iterate over all rows
+		for (int col = 0; col < columns_to_print; ++col) {  // Print the first few columns
+			std::cout << std::setw(10) << im_col(row, col).reveal() << " ";  // Adjust setw as needed for your data
+		}
+		std::cout << std::endl;  // New line after each row
+	}
+	std::cout << std::endl;  // Extra new line for better separation
+
+	*/
+
   for (int i = 0; i < m; i += TILE_SIZE) {
       /* _mm_prefetch(A + i * f, _MM_HINT_T0); */
         int i_max = std::min(i + TILE_SIZE, m);
@@ -156,16 +175,32 @@ namespace simple_nn
             for (int i = 0; i < this->output.size(); i++) {
                 this->output(i).complete_mult();
             }
-            /* std::cout << "Output size: " << this->output.size() << std::endl; */
+       /* std::cout << "before of conv 10 values of output: ";
+		for (int i = 0; i < 10 && i < this->output.size(); ++i) {
+
+			std::cout << this->output(i).reveal()<< " ";
+
+		}*/
 		if (use_bias)
             for (int n = 0; n < batch; n++) 
 			    this->output.block(oc * n, 0, oc, ohw).colwise() += bias;
 
-        if (this->quantize)
-            for (int i = 0; i < this->output.size(); i++) 
-                this->output(i) = this->output(i) * scale + zero_point;
-           
-		
+        if (this->quantize){
+			for (int i = 0; i < this->output.size(); i++) {
+				//this->output(i) = this->output(i).quantize(scale, zero_point);
+				this->output(i) = this->output(i) * scale + zero_point;
+				
+			}
+		}
+	/*	std::cout << "end of conv 10 values of output: ";
+		for (int i = 0; i < 10 && i < this->output.size(); ++i) {
+
+			std::cout << this->output(i).reveal()<< " ";
+
+		}*/
+         
+                
+
 	}
 
     template<typename T>

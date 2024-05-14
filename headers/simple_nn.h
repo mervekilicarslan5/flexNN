@@ -193,6 +193,7 @@ namespace simple_nn
 			/* output.row(i).maxCoeff(&classified[i]); */
 			output_float.row(i).maxCoeff(&classified[i]);
 		}
+
     }
 
     template<typename T>
@@ -332,7 +333,7 @@ namespace simple_nn
         }
 		string path = save_dir + "/" + fname;
 		fstream fin(path, ios::in | ios::binary);
-        cout<<path<<"path weighs"<<endl;
+        cout<<path<<"Weight pathway"<<endl;
 		if (!fin) {
 			cout << path << " does not exist." << endl;
 			exit(1);
@@ -488,7 +489,7 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
                 fs.write((char*)tempMatrix1.data(), sizeof(T) * s1);
                 fs.write((char*)tempMatrix2.data(), sizeof(T) * s2);
 
-                /* fs.write((char*) &(lc->zero_point.reveal()), sizeof(T)); */
+                //fs.write((char*) &(lc->zero_point.reveal()), sizeof(T)); 
             }
             else {
                 fs.read((char*)tempMatrix1.data(), sizeof(T) * s1);
@@ -536,7 +537,7 @@ void SimpleNN<T>::write_or_read_params(S& fs, string mode)
                 for (int i = 0; i < s1; i++)
                 {
                     lc->kernel(i / lc->kernel.cols(), i % lc->kernel.cols()) = T(tempMatrix1[i]);
-                    //cout<<tempMatrix1[i]<<endl;
+
                 } 
                 for (int i = 0; i < s2; i++)
                 {
